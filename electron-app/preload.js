@@ -1,6 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('overlay', {
-  dismiss: () => ipcRenderer.send('dismiss'),
-  getRestDuration: () => ipcRenderer.invoke('get-rest-duration'),
+  getConfig:    ()  => ipcRenderer.invoke('overlay:config'),
+  dismiss:      ()  => ipcRenderer.send('overlay:dismiss'),
+  onEndSound:   (cb) => ipcRenderer.on('overlay:end-sound', cb),
+});
+
+contextBridge.exposeInMainWorld('settingsApi', {
+  get:  ()  => ipcRenderer.invoke('settings:get'),
+  save: (s) => ipcRenderer.invoke('settings:save', s),
+});
+
+contextBridge.exposeInMainWorld('statsApi', {
+  get: () => ipcRenderer.invoke('stats:get'),
 });

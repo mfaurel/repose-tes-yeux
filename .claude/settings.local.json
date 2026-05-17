@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npx skills *)",
-      "Bash(dir C:\\\\workspace\\\\repose-tes-yeux *)"
+      "Bash(dir C:\\\\workspace\\\\repose-tes-yeux *)",
+      "Bash(npx electron *)"
     ]
   }
 }
