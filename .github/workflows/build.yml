@@ -19,14 +19,14 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore ReposeTestYeux.sln
+        run: dotnet restore ReposeTesYeux.sln
 
       - name: Test
-        run: dotnet test ReposeTestYeux.Tests/ReposeTestYeux.Tests.csproj --no-restore --verbosity normal
+        run: dotnet test ReposeTesYeux.Tests/ReposeTesYeux.Tests.csproj --no-restore --verbosity normal
 
       - name: Publish
         run: >
-          dotnet publish ReposeTestYeux/ReposeTestYeux.csproj
+          dotnet publish ReposeTesYeux/ReposeTesYeux.csproj
           -c Release
           -r win-x64
           --self-contained false

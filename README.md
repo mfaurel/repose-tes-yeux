@@ -117,19 +117,19 @@ Pour un déploiement en masse (parc informatique), distribuez simplement l'exe v
 ### Compiler
 
 ```powershell
-dotnet build ReposeTestYeux/ReposeTestYeux.csproj
+dotnet build ReposeTesYeux/ReposeTesYeux.csproj
 ```
 
 ### Lancer
 
 ```powershell
-dotnet run --project ReposeTestYeux/ReposeTestYeux.csproj
+dotnet run --project ReposeTesYeux/ReposeTesYeux.csproj
 ```
 
 ### Tests
 
 ```powershell
-dotnet test ReposeTestYeux.Tests/ReposeTestYeux.Tests.csproj
+dotnet test ReposeTesYeux.Tests/ReposeTesYeux.Tests.csproj
 ```
 
 26 tests automatisés couvrent le moteur de minuterie et la persistance des paramètres.
@@ -137,17 +137,17 @@ dotnet test ReposeTestYeux.Tests/ReposeTestYeux.Tests.csproj
 ### Publier un exe portable
 
 ```powershell
-dotnet publish ReposeTestYeux/ReposeTestYeux.csproj -c Release -r win-x64 --self-contained false
+dotnet publish ReposeTesYeux/ReposeTesYeux.csproj -c Release -r win-x64 --self-contained false
 ```
 
-L'exe se trouve ensuite dans `ReposeTestYeux/bin/Release/net8.0-windows/win-x64/publish/`.
+L'exe se trouve ensuite dans `ReposeTesYeux/bin/Release/net8.0-windows/win-x64/publish/`.
 
 ---
 
 ## Architecture
 
 ```
-ReposeTestYeux/
+ReposeTesYeux/
 ├── Timer/
 │   ├── EyeTimer.cs         — machine à états (Idle → Working → Break)
 │   ├── IClock.cs           — abstraction d'horloge (injectable pour les tests)
@@ -165,7 +165,7 @@ ReposeTestYeux/
     ├── StatsForm.cs         — statistiques du jour
     └── TrayController.cs   — icône et menu de la barre système
 
-ReposeTestYeux.Tests/
+ReposeTesYeux.Tests/
 ├── EyeTimerTests.cs        — 18 tests (transitions, pause, Ne-pas-déranger…)
 ├── SettingsStoreTests.cs   — 8 tests (valeurs par défaut, JSON corrompu, clamping…)
 └── FakeClock.cs            — horloge simulée pour les tests déterministes

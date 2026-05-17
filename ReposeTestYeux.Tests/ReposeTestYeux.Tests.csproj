@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ReposeTestYeux\ReposeTestYeux.csproj" />
+    <ProjectReference Include="..\ReposeTesYeux\ReposeTesYeux.csproj" />
   </ItemGroup>
 
   <ItemGroup>
