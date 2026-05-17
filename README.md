@@ -1,5 +1,7 @@
 # Repose Tes Yeux
 
+![Build](../../actions/workflows/build.yml/badge.svg)
+
 > *"Repose tes yeux"* — French for **"Rest your eyes"**
 
 A lightweight Windows tray application that reminds you to apply the **règle des 20/20/20** :
@@ -18,7 +20,7 @@ Fixer un écran force vos yeux à accommoder en permanence à courte distance. A
 
 ## Fonctionnalités
 
-- **Rappel automatique** — une fenêtre plein écran apparaît à l'échéance, sur tous vos moniteurs
+- **Rappel automatique** — une notification discrète apparaît en bas à droite de chaque écran à l'échéance
 - **Entièrement paramétrable** — intervalle, durée, distance, message, langue
 - **Icône dans la barre des tâches** — compteur temps restant, menu contextuel complet
 - **Démarrage automatique avec Windows** — via la clé de registre `HKCU` (sans droits admin)
@@ -45,10 +47,10 @@ Aucun droit administrateur n'est nécessaire ni à l'installation ni à l'exécu
 
 ## Utilisation
 
-1. Télécharger `ReposeTesYeux.exe` depuis les [Releases](../../releases)
+1. Télécharger `ReposeTesYeux.exe` depuis les [Actions CI](../../actions/workflows/build.yml) (artefact `ReposeTesYeux-win-x64`) ou depuis les [Releases](../../releases)
 2. Double-cliquer pour lancer — l'icône apparaît dans la barre système
 3. Le minuteur démarre immédiatement (intervalle par défaut : 20 minutes)
-4. À l'échéance, l'overlay s'affiche sur tous vos écrans
+4. À l'échéance, une notification apparaît en bas à droite de chaque écran
 
 ### Menu contextuel (clic droit sur l'icône)
 

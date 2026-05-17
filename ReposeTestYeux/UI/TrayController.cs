@@ -110,19 +110,10 @@ public class TrayController : IDisposable
 
     private void ShowOverlays()
     {
-        var screens = Screen.AllScreens;
-        foreach (var screen in screens)
+        foreach (var screen in Screen.AllScreens)
         {
-            var overlay = new OverlayForm(_settings, TimeSpan.FromSeconds(_settings.BreakDurationSeconds));
+            var overlay = new OverlayForm(_settings, TimeSpan.FromSeconds(_settings.BreakDurationSeconds), screen);
             overlay.SkipRequested += () => _timer.SkipBreak();
-
-            // Position overlay on this specific screen
-            overlay.StartPosition = FormStartPosition.Manual;
-            overlay.Bounds = screen.Bounds;
-            overlay.WindowState = FormWindowState.Normal;
-            overlay.FormBorderStyle = FormBorderStyle.None;
-            overlay.Bounds = screen.Bounds;
-
             _overlays.Add(overlay);
             overlay.Show();
         }

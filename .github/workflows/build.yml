@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore ReposeTestYeux.sln
+
+      - name: Test
+        run: dotnet test ReposeTestYeux.Tests/ReposeTestYeux.Tests.csproj --no-restore --verbosity normal
+
+      - name: Publish
+        run: >
+          dotnet publish ReposeTestYeux/ReposeTestYeux.csproj
+          -c Release
+          -r win-x64
+          --self-contained false
+          -p:PublishSingleFile=true
+          -o publish/
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReposeTesYeux-win-x64
+          path: publish/ReposeTesYeux.exe
+          retention-days: 90

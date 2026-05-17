@@ -5,6 +5,9 @@ namespace ReposeTesYeux.UI;
 
 public class OverlayForm : Form
 {
+    private const int ToastWidth = 380;
+    private const int ToastMargin = 16;
+
     private readonly AppSettings _settings;
     private readonly System.Windows.Forms.Timer _uiTimer;
     private TimeSpan _remaining;
@@ -13,16 +16,16 @@ public class OverlayForm : Form
     private Label _instructionLabel = null!;
     private Label _countdownLabel = null!;
     private ProgressBar _progressBar = null!;
-    private Button? _skipButton;
 
     public event Action? SkipRequested;
 
-    public OverlayForm(AppSettings settings, TimeSpan initialRemaining)
+    public OverlayForm(AppSettings settings, TimeSpan initialRemaining, Screen screen)
     {
         _settings = settings;
         _remaining = initialRemaining;
 
         BuildUI();
+        PositionOnScreen(screen);
         UpdateDisplay();
 
         _uiTimer = new System.Windows.Forms.Timer { Interval = 1000 };
@@ -34,48 +37,62 @@ public class OverlayForm : Form
     {
         FormBorderStyle = FormBorderStyle.None;
         TopMost = true;
-        WindowState = FormWindowState.Maximized;
-        BackColor = Color.FromArgb(20, 30, 48);
         ShowInTaskbar = false;
+        StartPosition = FormStartPosition.Manual;
+        BackColor = Color.FromArgb(22, 32, 50);
+        Width = ToastWidth;
+        AutoSize = false;
 
-        var panel = new TableLayoutPanel
+        var outer = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            RowCount = _settings.OverlayDismissible ? 5 : 4,
             ColumnCount = 1,
+            RowCount = _settings.OverlayDismissible ? 5 : 4,
+            Padding = new Padding(16, 12, 16, 12),
+            BackColor = Color.Transparent,
         };
-        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
+        // Rule tag
+        var ruleLabel = new Label
+        {
+            Text = Strings.Get("overlay_rule"),
+            AutoSize = true,
+            Font = new Font("Segoe UI", 8, FontStyle.Regular),
+            ForeColor = Color.FromArgb(100, 140, 200),
+            BackColor = Color.Transparent,
+            Margin = new Padding(0, 0, 0, 4),
+        };
+        outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        outer.Controls.Add(ruleLabel, 0, 0);
+
+        // Main message
         _messageLabel = new Label
         {
             AutoSize = false,
             Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleCenter,
-            Font = new Font("Segoe UI", 48, FontStyle.Bold),
+            Font = new Font("Segoe UI", 13, FontStyle.Bold),
             ForeColor = Color.FromArgb(230, 240, 255),
             BackColor = Color.Transparent,
+            Margin = new Padding(0, 2, 0, 2),
         };
+        outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        outer.Controls.Add(_messageLabel, 0, 1);
 
+        // Instruction
         _instructionLabel = new Label
         {
             AutoSize = false,
             Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleCenter,
-            Font = new Font("Segoe UI", 20),
-            ForeColor = Color.FromArgb(180, 200, 230),
+            Font = new Font("Segoe UI", 9),
+            ForeColor = Color.FromArgb(160, 185, 220),
             BackColor = Color.Transparent,
+            Margin = new Padding(0, 2, 0, 6),
         };
+        outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        outer.Controls.Add(_instructionLabel, 0, 2);
 
-        _countdownLabel = new Label
-        {
-            AutoSize = false,
-            Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleCenter,
-            Font = new Font("Segoe UI", 64, FontStyle.Bold),
-            ForeColor = Color.FromArgb(100, 200, 255),
-            BackColor = Color.Transparent,
-        };
-
+        // Progress bar
         _progressBar = new ProgressBar
         {
             Dock = DockStyle.Fill,
@@ -83,57 +100,77 @@ public class OverlayForm : Form
             Maximum = _settings.BreakDurationSeconds,
             Value = _settings.BreakDurationSeconds,
             Style = ProgressBarStyle.Continuous,
-            Height = 12,
+            Height = 6,
+            Margin = new Padding(0, 0, 0, 6),
         };
-
-        var ruleLabel = new Label
-        {
-            AutoSize = false,
-            Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleCenter,
-            Font = new Font("Segoe UI", 14, FontStyle.Italic),
-            ForeColor = Color.FromArgb(120, 150, 180),
-            BackColor = Color.Transparent,
-            Text = Strings.Get("overlay_rule"),
-        };
-
-        panel.Controls.Add(_messageLabel, 0, 0);
-        panel.Controls.Add(_instructionLabel, 0, 1);
-        panel.Controls.Add(_countdownLabel, 0, 2);
-        panel.Controls.Add(_progressBar, 0, 3);
-
-        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 35));
-        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 20));
-        panel.RowStyles.Add(new RowStyle(SizeType.Percent, 25));
-        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));
+        outer.RowStyles.Add(new RowStyle(SizeType.Absolute, 16));
+        outer.Controls.Add(_progressBar, 0, 3);
 
         if (_settings.OverlayDismissible)
         {
-            _skipButton = new Button
-            {
-                Text = Strings.Get("overlay_skip"),
-                Font = new Font("Segoe UI", 14),
-                ForeColor = Color.FromArgb(180, 200, 230),
-                BackColor = Color.FromArgb(40, 60, 90),
-                FlatStyle = FlatStyle.Flat,
-                AutoSize = true,
-                Anchor = AnchorStyles.None,
-            };
-            _skipButton.FlatAppearance.BorderColor = Color.FromArgb(100, 130, 180);
-            _skipButton.Click += (_, _) => SkipRequested?.Invoke();
-
-            var skipPanel = new FlowLayoutPanel
+            var bottomRow = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
+                ColumnCount = 2,
+                AutoSize = true,
+                BackColor = Color.Transparent,
             };
-            skipPanel.Controls.Add(_skipButton);
+            bottomRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            bottomRow.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
-            panel.Controls.Add(skipPanel, 0, 4);
-            panel.RowStyles.Add(new RowStyle(SizeType.Percent, 20));
+            _countdownLabel = new Label
+            {
+                AutoSize = true,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(100, 180, 255),
+                BackColor = Color.Transparent,
+                Anchor = AnchorStyles.Left | AnchorStyles.Bottom,
+            };
+            bottomRow.Controls.Add(_countdownLabel, 0, 0);
+
+            var skipBtn = new Button
+            {
+                Text = Strings.Get("overlay_skip"),
+                Font = new Font("Segoe UI", 9),
+                ForeColor = Color.FromArgb(160, 185, 220),
+                BackColor = Color.FromArgb(38, 55, 82),
+                FlatStyle = FlatStyle.Flat,
+                AutoSize = true,
+                Anchor = AnchorStyles.Right | AnchorStyles.Bottom,
+            };
+            skipBtn.FlatAppearance.BorderColor = Color.FromArgb(60, 90, 130);
+            skipBtn.FlatAppearance.MouseOverBackColor = Color.FromArgb(55, 78, 110);
+            skipBtn.Click += (_, _) => SkipRequested?.Invoke();
+            bottomRow.Controls.Add(skipBtn, 1, 0);
+
+            outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            outer.Controls.Add(bottomRow, 0, 4);
+        }
+        else
+        {
+            _countdownLabel = new Label
+            {
+                AutoSize = true,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(100, 180, 255),
+                BackColor = Color.Transparent,
+            };
+            outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            outer.Controls.Add(_countdownLabel, 0, 4);
         }
 
-        Controls.Add(panel);
+        Controls.Add(outer);
+        outer.PerformLayout();
+
+        // Size the form to fit content, then lock width
+        Height = outer.GetPreferredSize(new Size(ToastWidth, 0)).Height + 4;
+    }
+
+    private void PositionOnScreen(Screen screen)
+    {
+        var area = screen.WorkingArea;
+        Left = area.Right - Width - ToastMargin;
+        Top = area.Bottom - Height - ToastMargin;
     }
 
     private void UpdateDisplay()
@@ -158,15 +195,6 @@ public class OverlayForm : Form
             Invoke(UpdateDisplay);
         else
             UpdateDisplay();
-    }
-
-    public void Close(bool timerExpired)
-    {
-        _uiTimer.Stop();
-        if (InvokeRequired)
-            Invoke(Close);
-        else
-            Close();
     }
 
     private void OnUiTick(object? sender, EventArgs e)
