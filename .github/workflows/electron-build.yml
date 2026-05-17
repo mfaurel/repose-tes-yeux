@@ -52,13 +52,17 @@ jobs:
         working-directory: electron-app
         run: npm run build:linux
 
+      - name: List dist (debug)
+        shell: bash
+        run: ls -lh electron-app/dist/ || true
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: electron-${{ runner.os }}-ci
           path: |
-            electron-app/dist/*.exe
-            electron-app/dist/*.dmg
-            electron-app/dist/*.AppImage
+            electron-app/dist/ReposeTesYeux-*.exe
+            electron-app/dist/ReposeTesYeux-*.dmg
+            electron-app/dist/ReposeTesYeux-*.AppImage
           if-no-files-found: warn
           retention-days: 7

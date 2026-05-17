@@ -1,22 +1,22 @@
 name: Electron — Release
 
-# Trigger by pushing a tag: git tag electron-v1.2.3 && git push --tags
+# Trigger: git tag electron-v1.2.3 && git push --tags
 on:
   push:
     tags:
       - 'electron-v*'
 
 permissions:
-  contents: write   # needed to create the GitHub Release and upload assets
+  contents: write
 
 jobs:
-  # ── 1. Create the release shell so upload jobs can attach assets ──────────
+  # ── 1. Create the GitHub Release (empty, assets attached by build jobs) ────
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.create.outputs.upload_url }}
       tag: ${{ github.ref_name }}
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,6 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#electron-v}" >> $GITHUB_OUTPUT
 
       - name: Create release
-        id: create
         uses: softprops/action-gh-release@v2
         with:
           name: Repose Tes Yeux (Electron) v${{ steps.version.outputs.version }}
@@ -41,39 +40,46 @@ jobs:
 
             ### Téléchargement
 
-            | Plateforme | Fichier |
-            |---|---|
-            | Windows | `Repose-Tes-Yeux-Setup-*.exe` |
-            | macOS (Intel) | `Repose-Tes-Yeux-*-x64.dmg` |
-            | macOS (Apple Silicon) | `Repose-Tes-Yeux-*-arm64.dmg` |
-            | Linux | `Repose-Tes-Yeux-*.AppImage` |
+            | Plateforme | Fichier | Note |
+            |---|---|---|
+            | Windows (direct) | `ReposeTesYeux-Portable-*.exe` | Télécharger et lancer directement |
+            | Windows (installeur) | `ReposeTesYeux-Setup-*.exe` | Installation silencieuse |
+            | macOS Intel | `ReposeTesYeux-*-x64.dmg` | |
+            | macOS Apple Silicon | `ReposeTesYeux-*-arm64.dmg` | |
+            | Linux | `ReposeTesYeux-*-x64.AppImage` | `chmod +x` puis lancer |
 
             ### Utilisation
-            1. Installez / montez le fichier correspondant à votre OS
+            1. Téléchargez le fichier correspondant à votre OS
             2. Lancez **Repose Tes Yeux** — une icône apparaît dans la barre système
             3. La règle 20/20/20 démarre automatiquement
             4. Clic droit sur l'icône → **Tester le rappel maintenant** pour un test immédiat
 
-  # ── 2. Platform matrix builds ─────────────────────────────────────────────
+  # ── 2. Build on each platform and attach assets to the release ────────────
   build:
-    name: Build & Upload (${{ matrix.os }})
+    name: Build & Upload (${{ matrix.name }})
     needs: create-release
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
+          - name: Windows
+            os: windows-latest
             build_cmd: npm run build:win
-            artifact_glob: "electron-app/dist/*.exe"
+            # Uploads both: ReposeTesYeux-Portable-*.exe  AND  ReposeTesYeux-Setup-*.exe
+            artifact_glob: |
+              electron-app/dist/ReposeTesYeux-Portable-*.exe
+              electron-app/dist/ReposeTesYeux-Setup-*.exe
 
-          - os: macos-latest
+          - name: macOS
+            os: macos-latest
             build_cmd: npm run build:mac
-            artifact_glob: "electron-app/dist/*.dmg"
+            artifact_glob: electron-app/dist/ReposeTesYeux-*.dmg
 
-          - os: ubuntu-latest
+          - name: Linux
+            os: ubuntu-latest
             build_cmd: npm run build:linux
-            artifact_glob: "electron-app/dist/*.AppImage"
+            artifact_glob: electron-app/dist/ReposeTesYeux-*.AppImage
 
     steps:
       - uses: actions/checkout@v4
@@ -88,18 +94,22 @@ jobs:
         working-directory: electron-app
         run: npm ci
 
-      # macOS: skip code signing unless secrets are configured
-      # To enable: add CSC_LINK (base64 .p12) + CSC_KEY_PASSWORD + APPLE_ID +
-      # APPLE_APP_SPECIFIC_PASSWORD + APPLE_TEAM_ID secrets in repo settings
       - name: Build
         working-directory: electron-app
         run: ${{ matrix.build_cmd }}
         env:
-          CSC_IDENTITY_AUTO_DISCOVERY: ${{ runner.os == 'macOS' && 'false' || '' }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS: code signing skipped unless secrets are set.
+          # To enable: add CSC_LINK (base64 .p12), CSC_KEY_PASSWORD,
+          # APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID in repo secrets.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
-      - name: Upload release assets
+      - name: List dist (debug)
+        shell: bash
+        run: ls -lh electron-app/dist/ || true
+
+      - name: Upload assets to release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.create-release.outputs.tag }}
           files: ${{ matrix.artifact_glob }}
+          fail_on_unmatched_files: true
