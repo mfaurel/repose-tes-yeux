@@ -19,14 +19,14 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore ReposeTesYeux.sln
+        run: dotnet restore ReposeTestYeux.sln
 
       - name: Test
-        run: dotnet test ReposeTesYeux.Tests/ReposeTesYeux.Tests.csproj --no-restore --verbosity normal
+        run: dotnet test ReposeTestYeux.Tests/ReposeTestYeux.Tests.csproj --no-restore --verbosity normal
 
       - name: Publish
         run: >
-          dotnet publish ReposeTesYeux/ReposeTesYeux.csproj
+          dotnet publish ReposeTestYeux/ReposeTestYeux.csproj
           -c Release
           -r win-x64
           --self-contained false
@@ -36,6 +36,6 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: ReposeTesYeux-win-x64
-          path: publish/ReposeTesYeux.exe
+          name: ReposeTestYeux-win-x64
+          path: publish/ReposeTestYeux.exe
           retention-days: 90

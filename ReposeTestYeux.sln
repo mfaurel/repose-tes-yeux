@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReposeTesYeux", "ReposeTesYeux\ReposeTesYeux.csproj", "{14C2E145-681F-4010-95E7-956D656DF445}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReposeTestYeux", "ReposeTestYeux\ReposeTestYeux.csproj", "{14C2E145-681F-4010-95E7-956D656DF445}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReposeTesYeux.Tests", "ReposeTesYeux.Tests\ReposeTesYeux.Tests.csproj", "{6A6000FB-9A1B-4C47-A3CB-FDADCC5C7D9F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReposeTestYeux.Tests", "ReposeTestYeux.Tests\ReposeTestYeux.Tests.csproj", "{6A6000FB-9A1B-4C47-A3CB-FDADCC5C7D9F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
