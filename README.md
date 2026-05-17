@@ -108,6 +108,69 @@ Pour un déploiement en masse (parc informatique), distribuez simplement l'exe v
 
 ---
 
+## Publier une release Electron (overlay plein écran)
+
+L'application Electron se trouve dans `electron-app/`. Elle produit un overlay toujours au premier plan, visible par-dessus les applications plein écran et sur tous les moniteurs.
+
+### Prérequis
+
+- [Node.js 20+](https://nodejs.org/) et npm
+
+### Lancer en développement
+
+```powershell
+cd electron-app
+npm install
+npm start
+```
+
+Clic droit sur l'icône de la barre système → **Tester le rappel maintenant** pour déclencher l'overlay sans attendre 20 minutes.
+
+### Créer une release GitHub
+
+La release publie automatiquement les fichiers suivants sur GitHub via GitHub Actions :
+
+| Fichier | Description |
+|---|---|
+| `ReposeTesYeux-Portable-x.y.z.exe` | **Télécharger et lancer directement** — aucune installation |
+| `ReposeTesYeux-Setup-x.y.z.exe` | Installeur silencieux (NSIS) |
+| `ReposeTesYeux-x.y.z-x64.dmg` | macOS Intel |
+| `ReposeTesYeux-x.y.z-arm64.dmg` | macOS Apple Silicon |
+| `ReposeTesYeux-x.y.z-x64.AppImage` | Linux |
+
+**Étapes pour publier :**
+
+1. Mettez à jour la version dans `electron-app/package.json` :
+
+```json
+{ "version": "1.2.3" }
+```
+
+2. Committez ce changement :
+
+```powershell
+git add electron-app/package.json
+git commit -m "chore: bump electron version to 1.2.3"
+```
+
+3. Créez et poussez un tag `electron-vX.Y.Z` :
+
+```powershell
+git tag electron-v1.2.3
+git push origin electron-v1.2.3
+```
+
+GitHub Actions déclenche alors le workflow **Electron — Release** qui :
+- Crée la release GitHub avec les notes de version
+- Compile l'app en parallèle sur Windows, macOS et Linux
+- Attache tous les fichiers à la release automatiquement
+
+La release apparaît sur la page [Releases](../../releases) du dépôt. Les utilisateurs Windows téléchargent `ReposeTesYeux-Portable-x.y.z.exe` et le lancent directement, sans installation.
+
+> **Vérifier l'avancement** — onglet [Actions](../../actions/workflows/electron-release.yml) du dépôt.
+
+---
+
 ## Développement
 
 ### Prérequis
