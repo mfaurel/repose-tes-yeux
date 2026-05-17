@@ -1,0 +1,203 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --accent: #4fc3f7;
+  --accent-glow: rgba(79, 195, 247, 0.4);
+  --bg-dark: rgba(8, 12, 28, 0.88);
+  --text: #e0f7ff;
+  --text-muted: rgba(224, 247, 255, 0.6);
+  --radius: 24px;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ── Full-screen overlay ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-dark);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Decorative pulsing rings ── */
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--accent-glow);
+  animation: pulse 4s ease-in-out infinite;
+  pointer-events: none;
+}
+.ring-1 { width: 340px; height: 340px; animation-delay: 0s;    opacity: 0.35; }
+.ring-2 { width: 520px; height: 520px; animation-delay: 1.3s;  opacity: 0.2;  }
+.ring-3 { width: 700px; height: 700px; animation-delay: 2.6s;  opacity: 0.1;  }
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.35; }
+  50%       { transform: scale(1.06); opacity: 0.6;  }
+}
+
+/* ── Card ── */
+.card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 48px 56px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(79, 195, 247, 0.2);
+  border-radius: var(--radius);
+  box-shadow:
+    0 0 60px rgba(79, 195, 247, 0.12),
+    0 24px 64px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Eye SVG ── */
+.eye-icon {
+  width: 100px;
+  filter: drop-shadow(0 0 12px var(--accent-glow));
+}
+
+.eye-outline {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.iris {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  animation: blink 4s ease-in-out infinite;
+}
+
+.pupil {
+  fill: var(--accent);
+  opacity: 0.9;
+  animation: blink 4s ease-in-out infinite;
+}
+
+.gleam {
+  fill: white;
+  opacity: 0.8;
+  animation: blink 4s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1);   transform-origin: center 30px; }
+  94%           { transform: scaleY(0.05); transform-origin: center 30px; }
+}
+
+/* ── Typography ── */
+.title {
+  color: var(--text);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.rule {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.highlight {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Countdown ring ── */
+.timer-ring {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.progress-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.07);
+  stroke-width: 6;
+}
+
+.progress {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 327;   /* 2π × 52 */
+  stroke-dashoffset: 0;
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+  transition: stroke-dashoffset 1s linear;
+}
+
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Dismiss button ── */
+.dismiss-btn {
+  padding: 12px 36px;
+  background: transparent;
+  border: 1.5px solid rgba(79, 195, 247, 0.4);
+  border-radius: 100px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.dismiss-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(79, 195, 247, 0.08);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.dismiss-btn:active {
+  transform: scale(0.97);
+}

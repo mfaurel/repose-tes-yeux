@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Repose Tes Yeux</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="overlay" id="overlay">
+
+    <!-- Background blur rings -->
+    <div class="ring ring-1"></div>
+    <div class="ring ring-2"></div>
+    <div class="ring ring-3"></div>
+
+    <!-- Central card -->
+    <div class="card" id="card">
+      <div class="eye-icon">
+        <svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+          <path class="eye-outline" d="M5,30 Q50,-10 95,30 Q50,70 5,30 Z" />
+          <circle class="iris" cx="50" cy="30" r="14" />
+          <circle class="pupil" cx="50" cy="30" r="7" />
+          <circle class="gleam" cx="55" cy="25" r="3" />
+        </svg>
+      </div>
+
+      <h1 class="title">Repose tes yeux</h1>
+
+      <p class="rule">
+        Regarde quelque chose à <span class="highlight">20 mètres</span>
+      </p>
+
+      <div class="timer-ring">
+        <svg viewBox="0 0 120 120" class="progress-svg">
+          <circle class="track" cx="60" cy="60" r="52" />
+          <circle class="progress" cx="60" cy="60" r="52" id="progressCircle" />
+        </svg>
+        <div class="countdown" id="countdown">20</div>
+      </div>
+
+      <button class="dismiss-btn" id="dismissBtn">
+        Terminer
+      </button>
+    </div>
+
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
