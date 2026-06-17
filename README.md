@@ -156,8 +156,8 @@ git commit -m "chore: bump electron version to 1.2.3"
 3. Créez et poussez un tag `electron-vX.Y.Z` :
 
 ```powershell
-git tag electron-v1.2.3
-git push origin electron-v1.2.3
+git tag electron-v1.2.0
+git push origin electron-v1.2.0
 ```
 
 GitHub Actions déclenche alors le workflow **Electron — Release** qui :

@@ -41,6 +41,7 @@
     "nsis": {
       "oneClick": true,
       "perMachine": false,
+      "allowElevation": false,
       "createDesktopShortcut": false,
       "artifactName": "ReposeTesYeux-Setup-${version}.${ext}"
     },
