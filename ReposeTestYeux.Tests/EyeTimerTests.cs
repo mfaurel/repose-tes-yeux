@@ -190,4 +190,60 @@ public class EyeTimerTests : IDisposable
         // Just verify no exception and state is still working
         Assert.Equal(TimerState.Working, _timer.State);
     }
+
+    [Fact]
+    public void Pause_DuringBreak_TransitionsToPaused()
+    {
+        _timer.Start();
+        _timer.TriggerBreakNow();
+        _timer.Pause();
+        Assert.Equal(TimerState.Paused, _timer.State);
+    }
+
+    [Fact]
+    public void Resume_AfterPausingDuringBreak_ReturnsToBreak()
+    {
+        _timer.Start();
+        _timer.TriggerBreakNow();
+        _timer.Pause();
+        _timer.Resume();
+        Assert.Equal(TimerState.Break, _timer.State);
+    }
+
+    [Fact]
+    public void Stop_WhileInBreak_ResetsToIdle()
+    {
+        _timer.Start();
+        _timer.TriggerBreakNow();
+        _timer.Stop();
+        Assert.Equal(TimerState.Idle, _timer.State);
+    }
+
+    [Fact]
+    public void BreaksToday_MultipleBreaks_CountsAll()
+    {
+        _timer.Start();
+        _timer.TriggerBreakNow();
+        _timer.SkipBreak();
+        _timer.TriggerBreakNow();
+        _timer.SkipBreak();
+        _timer.TriggerBreakNow();
+        Assert.Equal(3, _timer.BreaksToday);
+    }
+
+    [Fact]
+    public void DoNotDisturb_OutsideWindow_DoesNotSkipBreak()
+    {
+        var localNow = _clock.LocalTimeNow;
+        _settings.DoNotDisturbStart = localNow.AddMinutes(10).ToString("HH:mm");
+        _settings.DoNotDisturbEnd = localNow.AddMinutes(30).ToString("HH:mm");
+
+        _timer.Start();
+        bool breakStarted = false;
+        _timer.OnBreakStart += () => breakStarted = true;
+        _timer.TriggerBreakNow();
+
+        Assert.True(breakStarted);
+        Assert.Equal(TimerState.Break, _timer.State);
+    }
 }

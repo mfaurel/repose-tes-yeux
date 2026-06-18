@@ -47,6 +47,8 @@ Aucun droit administrateur n'est nécessaire ni à l'installation ni à l'exécu
 
 ## Utilisation
 
+Voir aussi [INSTALLATION.md](INSTALLATION.md) pour un guide complet incluant la publication de release et les instructions par OS.
+
 1. Télécharger `ReposeTesYeux.exe` depuis les [Actions CI](../../actions/workflows/build.yml) (artefact `ReposeTesYeux-win-x64`) ou depuis les [Releases](../../releases)
 2. Double-cliquer pour lancer — l'icône apparaît dans la barre système
 3. Le minuteur démarre immédiatement (intervalle par défaut : 20 minutes)
@@ -192,10 +194,10 @@ dotnet run --project ReposeTesYeux/ReposeTesYeux.csproj
 ### Tests
 
 ```powershell
-dotnet test ReposeTesYeux.Tests/ReposeTesYeux.Tests.csproj
+dotnet test ReposeTestYeux.Tests/ReposeTestYeux.Tests.csproj
 ```
 
-26 tests automatisés couvrent le moteur de minuterie et la persistance des paramètres.
+45 tests automatisés couvrent le moteur de minuterie, la persistance des paramètres et l'internationalisation.
 
 ### Publier un exe portable
 
@@ -229,10 +231,18 @@ ReposeTesYeux/
     └── TrayController.cs   — icône et menu de la barre système
 
 ReposeTesYeux.Tests/
-├── EyeTimerTests.cs        — 18 tests (transitions, pause, Ne-pas-déranger…)
+├── EyeTimerTests.cs        — 21 tests (transitions, pause, Ne-pas-déranger…)
 ├── SettingsStoreTests.cs   — 8 tests (valeurs par défaut, JSON corrompu, clamping…)
+├── AppSettingsTests.cs     — 9 tests (WithDefaults, clamping, DND window)
+├── StringsTests.cs         — 5 tests (sélection de langue, fallback, clé inconnue)
 └── FakeClock.cs            — horloge simulée pour les tests déterministes
 ```
+
+---
+
+## Roadmap
+
+Voir [ROADMAP.md](ROADMAP.md) pour les fonctionnalités prévues.
 
 ---
 
