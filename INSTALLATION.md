@@ -15,6 +15,9 @@
 
 Les releases se déclenchent automatiquement via GitHub Actions en **poussant un tag Git**.  
 Il n'y a rien à faire sur l'interface GitHub — le workflow crée la release et attache les fichiers.
+Ex :
+  git tag v1.3.0
+  git push origin v1.3.0
 
 ### Version WinForms (.NET)
 
@@ -90,6 +93,25 @@ Pas de prérequis — l'application embarque son propre runtime.
 3. Télécharger le fichier correspondant à votre OS
 4. Lancer **Repose Tes Yeux** — une icône apparaît dans la barre système
 5. Clic droit sur l'icône → **Tester le rappel maintenant** pour vérifier que tout fonctionne
+
+> **Windows — avertissement SmartScreen**  
+> L'application n'est pas signée numériquement. Windows peut afficher "Windows a protégé votre ordinateur".  
+> Cliquer **Informations complémentaires** → **Exécuter quand même** pour continuer.
+
+---
+
+### Version Electron — lancement via script (Windows, sans .exe)
+
+Alternative sans avertissement SmartScreen, à partir du code source.
+
+**Prérequis :** [Node.js](https://nodejs.org/) installé (v18 ou supérieur recommandé).
+
+1. Télécharger le dépôt (bouton **Code → Download ZIP** sur GitHub, ou `git clone`)
+2. Décompresser si besoin
+3. Double-cliquer sur **`Lancer.bat`** à la racine du projet
+
+Le script installe les dépendances si nécessaire et démarre l'application.  
+Une icône apparaît dans la barre système — clic droit → **Tester le rappel maintenant** pour vérifier.
 
 ---
 
