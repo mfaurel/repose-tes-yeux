@@ -15,6 +15,19 @@ public class AppSettings
     public string DoNotDisturbStart { get; set; } = "";
     public string DoNotDisturbEnd { get; set; } = "";
 
+    // Sound
+    public string CustomSoundPath { get; set; } = "";
+
+    // Long breaks
+    public bool LongBreakEnabled { get; set; } = true;
+    public int LongBreakEveryN { get; set; } = 3;
+    public int LongBreakDurationSeconds { get; set; } = 90;
+    public string LongBreakMessage { get; set; } = "";
+
+    // End of day
+    public bool EndOfDayEnabled { get; set; } = false;
+    public int EndOfDayHours { get; set; } = 7;
+
     [JsonIgnore]
     public bool HasDoNotDisturbWindow =>
         TimeOnly.TryParse(DoNotDisturbStart, out _) && TimeOnly.TryParse(DoNotDisturbEnd, out _);
@@ -31,6 +44,9 @@ public class AppSettings
         BreakDurationSeconds = Math.Clamp(BreakDurationSeconds, 5, 300);
         DistanceMetres = Math.Clamp(DistanceMetres, 1, 100);
         Language = string.IsNullOrWhiteSpace(Language) ? "fr-FR" : Language;
+        LongBreakEveryN = Math.Clamp(LongBreakEveryN, 2, 20);
+        LongBreakDurationSeconds = Math.Clamp(LongBreakDurationSeconds, 30, 600);
+        EndOfDayHours = Math.Clamp(EndOfDayHours, 1, 24);
         return this;
     }
 }

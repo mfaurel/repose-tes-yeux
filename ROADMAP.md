@@ -7,17 +7,20 @@ Les contributions sont les bienvenues — ouvrir une issue avant de commencer un
 
 ## v1.x — Stabilisation & UX
 
-- [ ] **Mode strict configurable depuis l'UI** — exposer le champ `overlayDismissible` dans le panneau de paramètres (actuellement persisté en JSON mais absent du formulaire)
-- [ ] **Compte à rebours visible dans la barre des tâches** — mettre à jour l'icône systray avec le temps restant (ex. overlay numérique ou arc de progression)
-- [ ] **Notification sonore personnalisable** — permettre à l'utilisateur de choisir un fichier audio `.wav` plutôt que le bip système
-- [ ] **Historique des pauses** — persister le compteur quotidien entre les redémarrages (`%APPDATA%\ReposeTesYeux\history.json`)
-- [ ] **Localisation supplémentaire** — ajouter l'espagnol (`es-ES`) et l'allemand (`de-DE`) à `Strings.cs`
-- [ ] **Démarrage réduit dans le systray** — ne pas afficher de fenêtre au démarrage, démarrer directement dans la barre des tâches
+- [x] **Mode strict configurable depuis l'UI** — `overlayDismissible` exposé dans le panneau de paramètres
+- [x] **Compte à rebours visible dans la barre des tâches** — icône systray mise à jour chaque minute (minutes restantes) / chaque seconde pendant une pause
+- [x] **Notification sonore personnalisable** — sélecteur de fichier `.wav` dans les paramètres, fallback sur le bip système
+- [x] **Historique des pauses** — compteur quotidien persisté entre les redémarrages (`%APPDATA%\ReposeTesYeux\history.json`), total hebdomadaire dans les statistiques
+- [x] **Localisation supplémentaire** — espagnol (`es-ES`) et allemand (`de-DE`) ajoutés
+- [x] **Démarrage réduit dans le systray** — aucune fenêtre au démarrage, l'app démarre directement dans la barre des tâches
+- [x] **Pause plus longue tous les N arrêts** — pause longue configurable (durée, message, fréquence) avec message d'étirement
+- [x] **Pause de fin de journée** — rappel configurable après N heures d'activité cumulées
 
 ---
 
 ## v2.0 — Fonctionnalités avancées
 
+- [ ] **Changement d'icône dans la barre des tâches** — avoir un œil bleu plutôt qu'un carré jaune (icône statique de départ)
 - [ ] **Détection d'inactivité** — suspendre le timer si la souris et le clavier sont inactifs depuis N minutes (l'utilisateur est déjà en pause)
 - [ ] **Profils de travail** — plusieurs configurations nommées (ex. "Bureau", "Visioconférence") commutables depuis le menu systray
 - [ ] **Statistiques hebdomadaires / mensuelles** — graphique de respect de la règle 20/20/20 dans `StatsForm`

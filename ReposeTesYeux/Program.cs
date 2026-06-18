@@ -24,8 +24,9 @@ static class Program
         Strings.SetLanguage(settings.Language);
 
         var startupManager = new StartupManager();
+        var history = new BreakHistory();
         using var timer = new EyeTimer(settings);
-        using var tray = new TrayController(timer, settings, store, startupManager);
+        using var tray = new TrayController(timer, settings, store, startupManager, history);
 
         timer.Start();
         Application.Run();

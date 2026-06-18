@@ -1,10 +1,11 @@
 using ReposeTesYeux.I18n;
+using ReposeTesYeux.Settings;
 
 namespace ReposeTesYeux.UI;
 
 public class StatsForm : Form
 {
-    public StatsForm(int breaksToday)
+    public StatsForm(BreakHistory history)
     {
         Text = Strings.Get("stats_title");
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -24,8 +25,17 @@ public class StatsForm : Form
 
         layout.Controls.Add(new Label
         {
-            Text = string.Format(Strings.Get("stats_breaks_today"), breaksToday),
+            Text = string.Format(Strings.Get("stats_breaks_today"), history.GetToday()),
             Font = new Font("Segoe UI", 16),
+            AutoSize = true,
+            Margin = new Padding(0, 0, 0, 4),
+        });
+
+        layout.Controls.Add(new Label
+        {
+            Text = string.Format(Strings.Get("stats_breaks_week"), history.GetWeekTotal()),
+            Font = new Font("Segoe UI", 11),
+            ForeColor = SystemColors.GrayText,
             AutoSize = true,
             Margin = new Padding(0, 0, 0, 16),
         });

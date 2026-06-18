@@ -81,7 +81,7 @@ public class EyeTimerTests : IDisposable
     {
         _timer.Start();
         bool fired = false;
-        _timer.OnBreakStart += () => fired = true;
+        _timer.OnBreakStart += _ => fired = true;
         _timer.TriggerBreakNow();
         Assert.True(fired);
         Assert.Equal(TimerState.Break, _timer.State);
@@ -159,7 +159,7 @@ public class EyeTimerTests : IDisposable
 
         _timer.Start();
         bool breakStarted = false;
-        _timer.OnBreakStart += () => breakStarted = true;
+        _timer.OnBreakStart += _ => breakStarted = true;
         _timer.TriggerBreakNow();
 
         Assert.False(breakStarted);
@@ -240,7 +240,7 @@ public class EyeTimerTests : IDisposable
 
         _timer.Start();
         bool breakStarted = false;
-        _timer.OnBreakStart += () => breakStarted = true;
+        _timer.OnBreakStart += _ => breakStarted = true;
         _timer.TriggerBreakNow();
 
         Assert.True(breakStarted);

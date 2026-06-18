@@ -9,18 +9,26 @@ public class EyeTimer : IDisposable
 
     private TimerState _state = TimerState.Idle;
     private DateTime _phaseEnd;
-    private DateTime _pausedAt;
     private TimeSpan _remainingAtPause;
     private int _breaksToday;
     private DateTime _lastBreakDate;
 
+    // Long break tracking
+    private int _breakCountSinceLongBreak;
+
+    // End-of-day tracking
+    private int _totalWorkSecondsToday;
+    private DateTime _workSecondsDate;
+    private bool _endOfDayFiredToday;
+
     public event Action<TimeSpan>? OnTick;
-    public event Action? OnBreakStart;
+    public event Action<BreakKind>? OnBreakStart;
     public event Action? OnBreakEnd;
     public event Action<TimerState>? OnStateChanged;
 
     public TimerState State => _state;
     public int BreaksToday => _breaksToday;
+    public int TotalWorkSecondsToday => _totalWorkSecondsToday;
 
     private AppSettings _settings;
 
@@ -44,8 +52,7 @@ public class EyeTimer : IDisposable
     {
         if (_state is not (TimerState.Working or TimerState.Break))
             return;
-        _pausedAt = _clock.UtcNow;
-        _remainingAtPause = _phaseEnd - _pausedAt;
+        _remainingAtPause = _phaseEnd - _clock.UtcNow;
         _ticker.Change(Timeout.Infinite, Timeout.Infinite);
         ChangeState(TimerState.Paused);
     }
@@ -54,10 +61,8 @@ public class EyeTimer : IDisposable
     {
         if (_state != TimerState.Paused)
             return;
-        // Restore whichever phase we were in based on remaining time context
         _phaseEnd = _clock.UtcNow + _remainingAtPause;
         _ticker.Change(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
-        // We can't know if we were in Working or Break phase from here, so we use a flag
         ChangeState(_remainingAtPause <= TimeSpan.FromSeconds(_settings.BreakDurationSeconds + 5)
             ? TimerState.Break
             : TimerState.Working);
@@ -75,7 +80,7 @@ public class EyeTimer : IDisposable
         if (_state == TimerState.Idle)
             return;
         _ticker.Change(Timeout.Infinite, Timeout.Infinite);
-        BeginBreakPhase();
+        BeginBreakPhase(BreakKind.Regular);
     }
 
     public void Stop()
@@ -91,7 +96,7 @@ public class EyeTimer : IDisposable
         ChangeState(TimerState.Working);
     }
 
-    private void BeginBreakPhase()
+    private void BeginBreakPhase(BreakKind kind)
     {
         if (IsInDoNotDisturb())
         {
@@ -99,11 +104,15 @@ public class EyeTimer : IDisposable
             return;
         }
 
-        _phaseEnd = _clock.UtcNow + TimeSpan.FromSeconds(_settings.BreakDurationSeconds);
+        int durationSeconds = kind == BreakKind.Regular
+            ? _settings.BreakDurationSeconds
+            : _settings.LongBreakDurationSeconds;
+
+        _phaseEnd = _clock.UtcNow + TimeSpan.FromSeconds(durationSeconds);
         _ticker.Change(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
         ChangeState(TimerState.Break);
         IncrementBreaksToday();
-        OnBreakStart?.Invoke();
+        OnBreakStart?.Invoke(kind);
     }
 
     private void EndBreak()
@@ -119,16 +128,55 @@ public class EyeTimer : IDisposable
 
         var remaining = _phaseEnd - _clock.UtcNow;
 
+        if (_state == TimerState.Working)
+            AccumulateWorkSeconds();
+
         if (remaining <= TimeSpan.Zero)
         {
             if (_state == TimerState.Working)
-                BeginBreakPhase();
+            {
+                var kind = DetermineNextBreakKind();
+                BeginBreakPhase(kind);
+            }
             else if (_state == TimerState.Break)
+            {
                 EndBreak();
+            }
             return;
         }
 
         OnTick?.Invoke(remaining);
+    }
+
+    private BreakKind DetermineNextBreakKind()
+    {
+        if (_settings.EndOfDayEnabled && !_endOfDayFiredToday &&
+            _totalWorkSecondsToday >= _settings.EndOfDayHours * 3600)
+        {
+            _endOfDayFiredToday = true;
+            return BreakKind.EndOfDay;
+        }
+
+        if (_settings.LongBreakEnabled && _breakCountSinceLongBreak + 1 >= _settings.LongBreakEveryN)
+        {
+            _breakCountSinceLongBreak = 0;
+            return BreakKind.Long;
+        }
+
+        _breakCountSinceLongBreak++;
+        return BreakKind.Regular;
+    }
+
+    private void AccumulateWorkSeconds()
+    {
+        var today = _clock.UtcNow.Date;
+        if (_workSecondsDate != today)
+        {
+            _totalWorkSecondsToday = 0;
+            _workSecondsDate = today;
+            _endOfDayFiredToday = false;
+        }
+        _totalWorkSecondsToday++;
     }
 
     private bool IsInDoNotDisturb()

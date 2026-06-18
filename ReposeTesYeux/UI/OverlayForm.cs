@@ -1,5 +1,4 @@
 using ReposeTesYeux.I18n;
-using ReposeTesYeux.Settings;
 
 namespace ReposeTesYeux.UI;
 
@@ -8,7 +7,8 @@ public class OverlayForm : Form
     private const int ToastWidth = 380;
     private const int ToastMargin = 16;
 
-    private readonly AppSettings _settings;
+    private readonly int _durationSeconds;
+    private readonly bool _dismissible;
     private readonly System.Windows.Forms.Timer _uiTimer;
     private TimeSpan _remaining;
 
@@ -19,12 +19,13 @@ public class OverlayForm : Form
 
     public event Action? SkipRequested;
 
-    public OverlayForm(AppSettings settings, TimeSpan initialRemaining, Screen screen)
+    public OverlayForm(bool dismissible, int durationSeconds, Screen screen, string message, string instruction)
     {
-        _settings = settings;
-        _remaining = initialRemaining;
+        _dismissible = dismissible;
+        _durationSeconds = durationSeconds;
+        _remaining = TimeSpan.FromSeconds(durationSeconds);
 
-        BuildUI();
+        BuildUI(message, instruction);
         PositionOnScreen(screen);
         UpdateDisplay();
 
@@ -33,7 +34,7 @@ public class OverlayForm : Form
         _uiTimer.Start();
     }
 
-    private void BuildUI()
+    private void BuildUI(string message, string instruction)
     {
         FormBorderStyle = FormBorderStyle.None;
         TopMost = true;
@@ -47,13 +48,12 @@ public class OverlayForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = _settings.OverlayDismissible ? 5 : 4,
+            RowCount = _dismissible ? 5 : 4,
             Padding = new Padding(16, 12, 16, 12),
             BackColor = Color.Transparent,
         };
         outer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-        // Rule tag
         var ruleLabel = new Label
         {
             Text = Strings.Get("overlay_rule"),
@@ -66,9 +66,9 @@ public class OverlayForm : Form
         outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         outer.Controls.Add(ruleLabel, 0, 0);
 
-        // Main message
         _messageLabel = new Label
         {
+            Text = message,
             AutoSize = false,
             Dock = DockStyle.Fill,
             Font = new Font("Segoe UI", 13, FontStyle.Bold),
@@ -79,9 +79,9 @@ public class OverlayForm : Form
         outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         outer.Controls.Add(_messageLabel, 0, 1);
 
-        // Instruction
         _instructionLabel = new Label
         {
+            Text = instruction,
             AutoSize = false,
             Dock = DockStyle.Fill,
             Font = new Font("Segoe UI", 9),
@@ -92,13 +92,12 @@ public class OverlayForm : Form
         outer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         outer.Controls.Add(_instructionLabel, 0, 2);
 
-        // Progress bar
         _progressBar = new ProgressBar
         {
             Dock = DockStyle.Fill,
             Minimum = 0,
-            Maximum = _settings.BreakDurationSeconds,
-            Value = _settings.BreakDurationSeconds,
+            Maximum = _durationSeconds,
+            Value = _durationSeconds,
             Style = ProgressBarStyle.Continuous,
             Height = 6,
             Margin = new Padding(0, 0, 0, 6),
@@ -106,7 +105,7 @@ public class OverlayForm : Form
         outer.RowStyles.Add(new RowStyle(SizeType.Absolute, 16));
         outer.Controls.Add(_progressBar, 0, 3);
 
-        if (_settings.OverlayDismissible)
+        if (_dismissible)
         {
             var bottomRow = new TableLayoutPanel
             {
@@ -161,8 +160,6 @@ public class OverlayForm : Form
 
         Controls.Add(outer);
         outer.PerformLayout();
-
-        // Size the form to fit content, then lock width
         Height = outer.GetPreferredSize(new Size(ToastWidth, 0)).Height + 4;
     }
 
@@ -175,15 +172,6 @@ public class OverlayForm : Form
 
     private void UpdateDisplay()
     {
-        var message = string.IsNullOrWhiteSpace(_settings.OverlayMessage)
-            ? Strings.Get("overlay_default_message")
-            : _settings.OverlayMessage;
-
-        _messageLabel.Text = message;
-        _instructionLabel.Text = string.Format(
-            Strings.Get("overlay_instruction"),
-            _settings.DistanceMetres,
-            _settings.BreakDurationSeconds);
         _countdownLabel.Text = string.Format(Strings.Get("overlay_countdown"), (int)_remaining.TotalSeconds);
         _progressBar.Value = Math.Max(0, Math.Min(_progressBar.Maximum, (int)_remaining.TotalSeconds));
     }
