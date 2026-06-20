@@ -246,4 +246,96 @@ public class EyeTimerTests : IDisposable
         Assert.True(breakStarted);
         Assert.Equal(TimerState.Break, _timer.State);
     }
+
+    // ── Break warning ─────────────────────────────────────────────────────────
+
+    [Fact]
+    public void OnBreakWarning_FiredWhenRemainingDropsBelowThreshold()
+    {
+        _settings.BreakWarningEnabled = true;
+        _settings.BreakWarningMinutes = 5;
+        _settings.WorkIntervalMinutes = 20;
+
+        _timer.Start();
+
+        TimeSpan? warned = null;
+        _timer.OnBreakWarning += r => warned = r;
+
+        // 20 - 14.9 = 5.1 min remaining → still above 5 min threshold, no warning yet
+        _clock.AdvanceMinutes(14.9);
+        _timer.Tick(null);
+        Assert.Null(warned);
+
+        // 20 - 15.1 = 4.9 min remaining → crosses the 5 min threshold, warning fires
+        _clock.AdvanceMinutes(0.2);
+        _timer.Tick(null);
+        Assert.NotNull(warned);
+        Assert.True(warned!.Value.TotalMinutes < 5);
+    }
+
+    [Fact]
+    public void OnBreakWarning_NotFiredWhenDisabled()
+    {
+        _settings.BreakWarningEnabled = false;
+        _settings.BreakWarningMinutes = 5;
+        _settings.WorkIntervalMinutes = 20;
+
+        _timer.Start();
+
+        bool fired = false;
+        _timer.OnBreakWarning += _ => fired = true;
+
+        _clock.AdvanceMinutes(16);
+        _timer.Tick(null);
+
+        Assert.False(fired);
+    }
+
+    [Fact]
+    public void OnBreakWarning_FiredOncePerWorkCycle()
+    {
+        _settings.BreakWarningEnabled = true;
+        _settings.BreakWarningMinutes = 5;
+        _settings.WorkIntervalMinutes = 20;
+
+        _timer.Start();
+
+        int count = 0;
+        _timer.OnBreakWarning += _ => count++;
+
+        // Tick several times inside the warning window
+        _clock.AdvanceMinutes(16);
+        _timer.Tick(null);
+        _timer.Tick(null);
+        _timer.Tick(null);
+
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void OnBreakWarning_ResetAfterBreakEnds()
+    {
+        _settings.BreakWarningEnabled = true;
+        _settings.BreakWarningMinutes = 5;
+        _settings.WorkIntervalMinutes = 20;
+
+        _timer.Start();
+
+        int count = 0;
+        _timer.OnBreakWarning += _ => count++;
+
+        // First cycle: advance into warning window and tick
+        _clock.AdvanceMinutes(16);
+        _timer.Tick(null);
+        Assert.Equal(1, count);
+
+        // Complete the break and start a new work cycle
+        _timer.TriggerBreakNow();
+        _timer.SkipBreak();
+
+        // Second cycle: warning should fire again
+        _clock.AdvanceMinutes(16);
+        _timer.Tick(null);
+        Assert.Equal(2, count);
+    }
 }

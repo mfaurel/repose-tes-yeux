@@ -21,12 +21,22 @@ public class EyeTimer : IDisposable
     private DateTime _workSecondsDate;
     private bool _endOfDayFiredToday;
 
+    // Auto-suspend (inactivity or presenter mode)
+    private bool _autoSuspended = false;
+
+    // Break warning (fires once per work cycle when approaching break)
+    private bool _warningFiredForCycle;
+
     public event Action<TimeSpan>? OnTick;
     public event Action<BreakKind>? OnBreakStart;
     public event Action? OnBreakEnd;
     public event Action<TimerState>? OnStateChanged;
+    public event Action? OnAutoSuspended;
+    public event Action? OnAutoResumed;
+    public event Action<TimeSpan>? OnBreakWarning;
 
     public TimerState State => _state;
+    public bool IsAutoSuspended => _autoSuspended;
     public int BreaksToday => _breaksToday;
     public int TotalWorkSecondsToday => _totalWorkSecondsToday;
 
@@ -54,6 +64,7 @@ public class EyeTimer : IDisposable
             return;
         _remainingAtPause = _phaseEnd - _clock.UtcNow;
         _ticker.Change(Timeout.Infinite, Timeout.Infinite);
+        _autoSuspended = false;
         ChangeState(TimerState.Paused);
     }
 
@@ -80,6 +91,7 @@ public class EyeTimer : IDisposable
         if (_state == TimerState.Idle)
             return;
         _ticker.Change(Timeout.Infinite, Timeout.Infinite);
+        _autoSuspended = false;
         BeginBreakPhase(BreakKind.Regular);
     }
 
@@ -91,6 +103,7 @@ public class EyeTimer : IDisposable
 
     private void BeginWorkPhase()
     {
+        _warningFiredForCycle = false;
         _phaseEnd = _clock.UtcNow + TimeSpan.FromMinutes(_settings.WorkIntervalMinutes);
         _ticker.Change(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
         ChangeState(TimerState.Working);
@@ -121,20 +134,62 @@ public class EyeTimer : IDisposable
         BeginWorkPhase();
     }
 
-    private void Tick(object? _)
+    internal void Tick(object? _)
     {
         if (_state is TimerState.Idle or TimerState.Paused)
             return;
+
+        // Auto-suspend checks (only affect the working phase)
+        if (_state == TimerState.Working)
+        {
+            bool shouldSuspend = ShouldAutoSuspend();
+
+            if (shouldSuspend && !_autoSuspended)
+            {
+                _autoSuspended = true;
+                OnAutoSuspended?.Invoke();
+                return;
+            }
+
+            if (!shouldSuspend && _autoSuspended)
+            {
+                _autoSuspended = false;
+                // User returned — reset to a fresh work interval
+                _phaseEnd = _clock.UtcNow + TimeSpan.FromMinutes(_settings.WorkIntervalMinutes);
+                OnAutoResumed?.Invoke();
+                // Emit first tick so tray tooltip updates immediately
+                OnTick?.Invoke(TimeSpan.FromMinutes(_settings.WorkIntervalMinutes));
+                return;
+            }
+
+            if (_autoSuspended)
+                return;
+        }
 
         var remaining = _phaseEnd - _clock.UtcNow;
 
         if (_state == TimerState.Working)
             AccumulateWorkSeconds();
 
+        if (_state == TimerState.Working && !_warningFiredForCycle
+            && _settings.BreakWarningEnabled
+            && remaining > TimeSpan.Zero
+            && remaining <= TimeSpan.FromMinutes(_settings.BreakWarningMinutes))
+        {
+            _warningFiredForCycle = true;
+            OnBreakWarning?.Invoke(remaining);
+        }
+
         if (remaining <= TimeSpan.Zero)
         {
             if (_state == TimerState.Working)
             {
+                // Defer break while in presentation mode
+                if (_settings.SuspendInPresenterMode && PresenterModeDetector.IsPresenting())
+                {
+                    _phaseEnd = _clock.UtcNow + TimeSpan.FromSeconds(30);
+                    return;
+                }
                 var kind = DetermineNextBreakKind();
                 BeginBreakPhase(kind);
             }
@@ -147,6 +202,9 @@ public class EyeTimer : IDisposable
 
         OnTick?.Invoke(remaining);
     }
+
+    private bool ShouldAutoSuspend() =>
+        (_settings.InactivityDetectionEnabled && IdleDetector.IsIdle(_settings.InactivityThresholdMinutes));
 
     private BreakKind DetermineNextBreakKind()
     {

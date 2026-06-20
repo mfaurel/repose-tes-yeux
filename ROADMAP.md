@@ -20,23 +20,25 @@ Les contributions sont les bienvenues — ouvrir une issue avant de commencer un
 
 ## v2.0 — Fonctionnalités avancées
 
-- [ ] **Changement d'icône dans la barre des tâches** — avoir un œil bleu plutôt qu'un carré jaune (icône statique de départ)
-- [ ] **Détection d'inactivité** — suspendre le timer si la souris et le clavier sont inactifs depuis N minutes (l'utilisateur est déjà en pause)
-- [ ] **Profils de travail** — plusieurs configurations nommées (ex. "Bureau", "Visioconférence") commutables depuis le menu systray
-- [ ] **Statistiques hebdomadaires / mensuelles** — graphique de respect de la règle 20/20/20 dans `StatsForm`
+- [x] **Changement d'icône dans la barre des tâches** — icône œil anti-aliasée 32×16 px avec iris et pupille, rendu 32×32 réduit à 16×16 HQ
+- [x] **Détection d'inactivité** — `IdleDetector` via `GetLastInputInfo` ; timer suspendu si inactif ≥ N minutes, reprise avec intervalle de travail remis à zéro
+- [x] **Profils de travail** — `ProfileStore` (profiles.json) + sous-menu systray « Profils » avec bascule, création et suppression
+- [x] **Statistiques hebdomadaires / mensuelles** — graphique GDI+ 28 jours dans `StatsForm` + totaux hebdo/mensuel
 - [ ] **Intégration agenda** — skip automatique des pauses pendant les plages occupées du calendrier (Outlook / Google Calendar via API)
-- [ ] **Overlay adaptatif** — fond de l'overlay calqué sur l'image de fond d'écran (ambiance naturelle) pour réduire le stress visuel
-- [ ] **Mode présentateur** — détecter la mise en miroir d'écran ou le mode présentation Windows et suspendre automatiquement
+- [x] **Overlay adaptatif** — fond d'écran via `SystemParametersInfo(SPI_GETDESKWALLPAPER)` teinté sombre en arrière-plan de l'overlay
+- [x] **Mode présentateur** — `PresenterModeDetector` via `SHQueryUserNotificationState` ; pauses différées 30 s tant que le mode présentation est actif
 
 ---
 
 ## v2.x — Multi-plateforme & distribution
 
+- [x] **Prévenir** — info-bulle système (balloon tip) depuis la barre des tâches, 5 min avant la pause (délai configurable) ; clé `BreakWarningEnabled` + `BreakWarningMinutes` dans les paramètres
+- [x] **Transparence** — opacité de l'overlay configurable de 30 % à 100 % via `OverlayOpacityPercent` (défaut 95 %)
+- [x] **Mise à jour automatique** — `UpdateChecker` vérifie les releases GitHub au démarrage et affiche une info-bulle si une version plus récente existe ; clé `AutoUpdateEnabled`
+- [x] **CLI** — `ReposeTesYeux --status`, `--break-now`, `--pause`, `--version`, `--help` via named pipe `\\.\pipe\ReposeTesYeux`
 - [ ] **Convergence WinForms / Electron** — uniformiser les fonctionnalités entre les deux variantes ou choisir une architecture unifiée
-- [ ] **Mise à jour automatique** — intégrer `electron-updater` (Electron) et un mécanisme équivalent pour la variante WinForms
-- [ ] **Déploiement MSIX** — package Microsoft Store pour une distribution sans droits admin en entreprise
+- [ ] **Déploiement MSIX** — package Microsoft Store pour une distribution sans droits admin en entreprise ; nécessite un `.wapproj` et la signature de code
 - [ ] **Support Linux natif** — daemon systemd + notification D-Bus pour la variante Electron
-- [ ] **CLI** — interface en ligne de commande (`repose-tes-yeux --status`, `--break-now`) pour automatisation et scripts
 
 ---
 

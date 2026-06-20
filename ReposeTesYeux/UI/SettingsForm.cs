@@ -9,6 +9,7 @@ public class SettingsForm : Form
     private readonly AppSettings _settings;
     private readonly SettingsStore _store;
     private readonly StartupManager _startupManager;
+    private readonly ProfileStore _profileStore;
 
     private NumericUpDown _workIntervalInput = null!;
     private NumericUpDown _breakDurationInput = null!;
@@ -27,14 +28,23 @@ public class SettingsForm : Form
     private TextBox _longBreakMessageInput = null!;
     private CheckBox _endOfDayEnabledInput = null!;
     private NumericUpDown _endOfDayHoursInput = null!;
+    private CheckBox _inactivityEnabledInput = null!;
+    private NumericUpDown _inactivityThresholdInput = null!;
+    private CheckBox _presenterModeInput = null!;
+    private CheckBox _adaptiveOverlayInput = null!;
+    private NumericUpDown _overlayOpacityInput = null!;
+    private CheckBox _breakWarningEnabledInput = null!;
+    private NumericUpDown _breakWarningMinutesInput = null!;
+    private CheckBox _autoUpdateEnabledInput = null!;
 
     public event Action<AppSettings>? SettingsSaved;
 
-    public SettingsForm(AppSettings settings, SettingsStore store, StartupManager startupManager)
+    public SettingsForm(AppSettings settings, SettingsStore store, StartupManager startupManager, ProfileStore profileStore)
     {
         _settings = settings;
         _store = store;
         _startupManager = startupManager;
+        _profileStore = profileStore;
         BuildUI();
     }
 
@@ -134,6 +144,39 @@ public class SettingsForm : Form
         _endOfDayHoursInput = new NumericUpDown { Minimum = 1, Maximum = 24, Value = _settings.EndOfDayHours, Width = 80 };
         AddRow(layout, row++, "settings_end_of_day_hours", _endOfDayHoursInput);
 
+        // ── Inactivity & Presenter mode ───────────────────────────────────────
+        AddSeparator(layout, row++);
+
+        _inactivityEnabledInput = new CheckBox { Checked = _settings.InactivityDetectionEnabled, AutoSize = true };
+        AddRow(layout, row++, "settings_inactivity_enabled", _inactivityEnabledInput);
+
+        _inactivityThresholdInput = new NumericUpDown { Minimum = 1, Maximum = 60, Value = _settings.InactivityThresholdMinutes, Width = 80 };
+        AddRow(layout, row++, "settings_inactivity_threshold", _inactivityThresholdInput);
+
+        _presenterModeInput = new CheckBox { Checked = _settings.SuspendInPresenterMode, AutoSize = true };
+        AddRow(layout, row++, "settings_presenter_mode", _presenterModeInput);
+
+        _adaptiveOverlayInput = new CheckBox { Checked = _settings.AdaptiveOverlayEnabled, AutoSize = true };
+        AddRow(layout, row++, "settings_adaptive_overlay", _adaptiveOverlayInput);
+
+        _overlayOpacityInput = new NumericUpDown { Minimum = 30, Maximum = 100, Value = _settings.OverlayOpacityPercent, Width = 80 };
+        AddRow(layout, row++, "settings_overlay_opacity", _overlayOpacityInput);
+
+        // ── Break warning ─────────────────────────────────────────────────────
+        AddSeparator(layout, row++);
+
+        _breakWarningEnabledInput = new CheckBox { Checked = _settings.BreakWarningEnabled, AutoSize = true };
+        AddRow(layout, row++, "settings_break_warning_enabled", _breakWarningEnabledInput);
+
+        _breakWarningMinutesInput = new NumericUpDown { Minimum = 1, Maximum = 30, Value = _settings.BreakWarningMinutes, Width = 80 };
+        AddRow(layout, row++, "settings_break_warning_minutes", _breakWarningMinutesInput);
+
+        // ── Misc ──────────────────────────────────────────────────────────────
+        AddSeparator(layout, row++);
+
+        _autoUpdateEnabledInput = new CheckBox { Checked = _settings.AutoUpdateEnabled, AutoSize = true };
+        AddRow(layout, row++, "settings_auto_update_enabled", _autoUpdateEnabledInput);
+
         // ── Buttons ───────────────────────────────────────────────────────────
         AddSeparator(layout, row++);
 
@@ -212,8 +255,20 @@ public class SettingsForm : Form
         _settings.LongBreakMessage = _longBreakMessageInput.Text.Trim();
         _settings.EndOfDayEnabled = _endOfDayEnabledInput.Checked;
         _settings.EndOfDayHours = (int)_endOfDayHoursInput.Value;
+        _settings.InactivityDetectionEnabled = _inactivityEnabledInput.Checked;
+        _settings.InactivityThresholdMinutes = (int)_inactivityThresholdInput.Value;
+        _settings.SuspendInPresenterMode = _presenterModeInput.Checked;
+        _settings.AdaptiveOverlayEnabled = _adaptiveOverlayInput.Checked;
+        _settings.OverlayOpacityPercent = (int)_overlayOpacityInput.Value;
+        _settings.BreakWarningEnabled = _breakWarningEnabledInput.Checked;
+        _settings.BreakWarningMinutes = (int)_breakWarningMinutesInput.Value;
+        _settings.AutoUpdateEnabled = _autoUpdateEnabledInput.Checked;
 
         _store.Save(_settings);
+
+        // Keep the active profile in sync
+        if (_profileStore.Contains(_settings.ActiveProfileName))
+            _profileStore.Save(_settings.ActiveProfileName, _settings);
 
         if (_settings.LaunchAtStartup != wasStartup)
             _startupManager.SetLaunchAtStartup(_settings.LaunchAtStartup);

@@ -126,13 +126,5 @@ public class BreakKindTests : IDisposable
         Assert.DoesNotContain(BreakKind.EndOfDay, kinds);
     }
 
-    // Directly invoke the private Tick via the timer's exposed state machine
-    // by advancing the clock so remaining <= 0 and calling TriggerBreakNow is not needed.
-    // Instead we use reflection to call the private Tick method.
-    private void SimulateTick()
-    {
-        var method = typeof(EyeTimer).GetMethod("Tick",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        method?.Invoke(_timer, new object?[] { null });
-    }
+    private void SimulateTick() => _timer.Tick(null);
 }

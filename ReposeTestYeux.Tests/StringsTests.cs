@@ -50,6 +50,10 @@ public class StringsTests : IDisposable
             "settings_message", "settings_language", "settings_startup", "settings_dismissible",
             "settings_sound", "settings_dnd_start", "settings_dnd_end", "settings_save", "settings_cancel",
             "stats_title", "stats_breaks_today", "stats_close",
+            "balloon_warning_title", "balloon_warning_text",
+            "settings_break_warning_enabled", "settings_break_warning_minutes",
+            "settings_overlay_opacity", "settings_auto_update_enabled",
+            "balloon_update_title", "balloon_update_text",
         };
 
         foreach (var lang in new[] { "fr-FR", "en-GB" })

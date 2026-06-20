@@ -26,6 +26,25 @@ public class BreakHistory
             .Sum(i => _data.TryGetValue(today.AddDays(-i).ToString("yyyy-MM-dd"), out var v) ? v : 0);
     }
 
+    public int GetMonthTotal()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        return Enumerable.Range(0, 30)
+            .Sum(i => _data.TryGetValue(today.AddDays(-i).ToString("yyyy-MM-dd"), out var v) ? v : 0);
+    }
+
+    public IReadOnlyDictionary<DateOnly, int> GetLastNDays(int n)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var result = new Dictionary<DateOnly, int>();
+        for (int i = 0; i < n; i++)
+        {
+            var date = today.AddDays(-i);
+            result[date] = _data.TryGetValue(date.ToString("yyyy-MM-dd"), out var v) ? v : 0;
+        }
+        return result;
+    }
+
     public void Increment()
     {
         var key = TodayKey();

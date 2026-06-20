@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+using System.Text;
 using ReposeTesYeux.I18n;
 
 namespace ReposeTesYeux.UI;
@@ -19,22 +21,27 @@ public class OverlayForm : Form
 
     public event Action? SkipRequested;
 
-    public OverlayForm(bool dismissible, int durationSeconds, Screen screen, string message, string instruction)
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern bool SystemParametersInfo(int uAction, int uParam, StringBuilder lpvParam, int fuWinIni);
+    private const int SPI_GETDESKWALLPAPER = 0x0073;
+
+    public OverlayForm(bool dismissible, int durationSeconds, Screen screen, string message, string instruction, bool adaptiveOverlay = false, double opacity = 0.95)
     {
         _dismissible = dismissible;
         _durationSeconds = durationSeconds;
         _remaining = TimeSpan.FromSeconds(durationSeconds);
 
-        BuildUI(message, instruction);
+        BuildUI(message, instruction, adaptiveOverlay);
         PositionOnScreen(screen);
         UpdateDisplay();
+        Opacity = Math.Clamp(opacity, 0.3, 1.0);
 
         _uiTimer = new System.Windows.Forms.Timer { Interval = 1000 };
         _uiTimer.Tick += OnUiTick;
         _uiTimer.Start();
     }
 
-    private void BuildUI(string message, string instruction)
+    private void BuildUI(string message, string instruction, bool adaptiveOverlay)
     {
         FormBorderStyle = FormBorderStyle.None;
         TopMost = true;
@@ -43,6 +50,9 @@ public class OverlayForm : Form
         BackColor = Color.FromArgb(22, 32, 50);
         Width = ToastWidth;
         AutoSize = false;
+
+        if (adaptiveOverlay)
+            ApplyAdaptiveBackground();
 
         var outer = new TableLayoutPanel
         {
@@ -161,6 +171,38 @@ public class OverlayForm : Form
         Controls.Add(outer);
         outer.PerformLayout();
         Height = outer.GetPreferredSize(new Size(ToastWidth, 0)).Height + 4;
+    }
+
+    private void ApplyAdaptiveBackground()
+    {
+        try
+        {
+            var wallpaperPath = GetWallpaperPath();
+            if (string.IsNullOrEmpty(wallpaperPath) || !File.Exists(wallpaperPath))
+                return;
+
+            using var wallpaper = Image.FromFile(wallpaperPath);
+            var tinted = CreateTintedBackground(wallpaper, ToastWidth, 200);
+            BackgroundImage = tinted;
+            BackgroundImageLayout = ImageLayout.Stretch;
+        }
+        catch { }
+    }
+
+    private static string? GetWallpaperPath()
+    {
+        var sb = new StringBuilder(260);
+        return SystemParametersInfo(SPI_GETDESKWALLPAPER, 260, sb, 0) ? sb.ToString() : null;
+    }
+
+    private static Bitmap CreateTintedBackground(Image source, int width, int height)
+    {
+        var bmp = new Bitmap(width, height);
+        using var g = Graphics.FromImage(bmp);
+        g.DrawImage(source, 0, 0, width, height);
+        using var darkOverlay = new SolidBrush(Color.FromArgb(195, 22, 32, 50));
+        g.FillRectangle(darkOverlay, 0, 0, width, height);
+        return bmp;
     }
 
     private void PositionOnScreen(Screen screen)

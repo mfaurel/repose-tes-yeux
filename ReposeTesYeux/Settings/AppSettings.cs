@@ -28,6 +28,29 @@ public class AppSettings
     public bool EndOfDayEnabled { get; set; } = false;
     public int EndOfDayHours { get; set; } = 7;
 
+    // Inactivity detection
+    public bool InactivityDetectionEnabled { get; set; } = false;
+    public int InactivityThresholdMinutes { get; set; } = 5;
+
+    // Presenter mode
+    public bool SuspendInPresenterMode { get; set; } = true;
+
+    // Adaptive overlay
+    public bool AdaptiveOverlayEnabled { get; set; } = false;
+
+    // Overlay opacity (30–100 %)
+    public int OverlayOpacityPercent { get; set; } = 95;
+
+    // Break warning notification
+    public bool BreakWarningEnabled { get; set; } = true;
+    public int BreakWarningMinutes { get; set; } = 5;
+
+    // Auto-update check
+    public bool AutoUpdateEnabled { get; set; } = true;
+
+    // Active profile name (stored for display purposes only)
+    public string ActiveProfileName { get; set; } = ProfileStore.DefaultProfileKey;
+
     [JsonIgnore]
     public bool HasDoNotDisturbWindow =>
         TimeOnly.TryParse(DoNotDisturbStart, out _) && TimeOnly.TryParse(DoNotDisturbEnd, out _);
@@ -47,6 +70,9 @@ public class AppSettings
         LongBreakEveryN = Math.Clamp(LongBreakEveryN, 2, 20);
         LongBreakDurationSeconds = Math.Clamp(LongBreakDurationSeconds, 30, 600);
         EndOfDayHours = Math.Clamp(EndOfDayHours, 1, 24);
+        InactivityThresholdMinutes = Math.Clamp(InactivityThresholdMinutes, 1, 60);
+        BreakWarningMinutes = Math.Clamp(BreakWarningMinutes, 1, 30);
+        OverlayOpacityPercent = Math.Clamp(OverlayOpacityPercent, 30, 100);
         return this;
     }
 }

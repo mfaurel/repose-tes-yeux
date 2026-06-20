@@ -70,4 +70,53 @@ public class AppSettingsTests
         Assert.False(s.HasDoNotDisturbWindow);
         Assert.Null(s.DoNotDisturbWindow);
     }
+
+    [Fact]
+    public void WithDefaults_ClampsBreakWarningMinutesAboveMax()
+    {
+        var s = new AppSettings { BreakWarningMinutes = 999 }.WithDefaults();
+        Assert.Equal(30, s.BreakWarningMinutes);
+    }
+
+    [Fact]
+    public void WithDefaults_ClampsBreakWarningMinutesBelowMin()
+    {
+        var s = new AppSettings { BreakWarningMinutes = 0 }.WithDefaults();
+        Assert.Equal(1, s.BreakWarningMinutes);
+    }
+
+    [Fact]
+    public void WithDefaults_ClampsOverlayOpacityAboveMax()
+    {
+        var s = new AppSettings { OverlayOpacityPercent = 200 }.WithDefaults();
+        Assert.Equal(100, s.OverlayOpacityPercent);
+    }
+
+    [Fact]
+    public void WithDefaults_ClampsOverlayOpacityBelowMin()
+    {
+        var s = new AppSettings { OverlayOpacityPercent = 10 }.WithDefaults();
+        Assert.Equal(30, s.OverlayOpacityPercent);
+    }
+
+    [Fact]
+    public void BreakWarningEnabled_DefaultTrue()
+    {
+        var s = new AppSettings();
+        Assert.True(s.BreakWarningEnabled);
+    }
+
+    [Fact]
+    public void OverlayOpacityPercent_Default95()
+    {
+        var s = new AppSettings();
+        Assert.Equal(95, s.OverlayOpacityPercent);
+    }
+
+    [Fact]
+    public void AutoUpdateEnabled_DefaultTrue()
+    {
+        var s = new AppSettings();
+        Assert.True(s.AutoUpdateEnabled);
+    }
 }
