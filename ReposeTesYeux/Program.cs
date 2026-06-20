@@ -45,6 +45,9 @@ static class Program
         if (!profileStore.Contains(settings.ActiveProfileName))
             settings.ActiveProfileName = ProfileStore.DefaultProfileKey;
 
+        // Sync registry key with the stored setting (handles first run + manual edits)
+        startupManager.SetLaunchAtStartup(settings.LaunchAtStartup);
+
         using var timer = new EyeTimer(settings);
         using var cliServer = new CliServer(timer);
         using var tray = new TrayController(timer, settings, store, startupManager, history, profileStore);

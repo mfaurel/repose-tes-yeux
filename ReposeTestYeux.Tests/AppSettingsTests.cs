@@ -119,4 +119,11 @@ public class AppSettingsTests
         var s = new AppSettings();
         Assert.True(s.AutoUpdateEnabled);
     }
+
+    [Fact]
+    public void LaunchAtStartup_DefaultTrue()
+    {
+        var s = new AppSettings();
+        Assert.True(s.LaunchAtStartup);
+    }
 }

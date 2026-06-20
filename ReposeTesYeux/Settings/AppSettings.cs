@@ -9,7 +9,7 @@ public class AppSettings
     public int DistanceMetres { get; set; } = 20;
     public string OverlayMessage { get; set; } = "";
     public string Language { get; set; } = "fr-FR";
-    public bool LaunchAtStartup { get; set; } = false;
+    public bool LaunchAtStartup { get; set; } = true;
     public bool OverlayDismissible { get; set; } = true;
     public bool SoundEnabled { get; set; } = true;
     public string DoNotDisturbStart { get; set; } = "";
