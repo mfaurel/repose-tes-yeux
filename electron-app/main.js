@@ -1,5 +1,7 @@
 const { app, BrowserWindow, screen, Tray, Menu, nativeImage, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const { execSync } = require('child_process');
 
 // Single instance lock — must be before app.whenReady
 if (!app.requestSingleInstanceLock()) { app.quit(); }
@@ -21,6 +23,39 @@ let statsWindow = null;
 let tray = null;
 
 setLanguage(settings.language);
+
+// ── Startup shortcut management ────────────────────────────────────────────
+
+function manageStartupShortcut(enable) {
+  const lnkPath = path.join(
+    process.env.APPDATA,
+    'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup',
+    'ReposeTeYeux.lnk'
+  );
+
+  if (!enable) {
+    try { if (fs.existsSync(lnkPath)) fs.unlinkSync(lnkPath); } catch (_) {}
+    return;
+  }
+
+  if (fs.existsSync(lnkPath)) return;
+
+  const vbsPath = path.resolve(app.getAppPath(), '..', 'Lancer.vbs');
+  const scriptDir = path.dirname(vbsPath);
+  const psScript = `
+$ws = New-Object -ComObject WScript.Shell
+$lnk = $ws.CreateShortcut('${lnkPath.replace(/'/g, "''")}')
+$lnk.TargetPath = 'wscript.exe'
+$lnk.Arguments = '"${vbsPath.replace(/\\/g, '\\\\').replace(/'/g, "''")}"'
+$lnk.WorkingDirectory = '${scriptDir.replace(/'/g, "''")}'
+$lnk.Description = 'Repose Tes Yeux'
+$lnk.Save()
+`;
+  const encoded = Buffer.from(psScript, 'utf16le').toString('base64');
+  try {
+    execSync(`powershell -WindowStyle Hidden -NoProfile -EncodedCommand ${encoded}`, { windowsHide: true });
+  } catch (_) {}
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -236,7 +271,7 @@ ipcMain.handle('settings:save', (_, newSettings) => {
   settings = { ...settings, ...newSettings };
   saveSettings(settings);
   setLanguage(settings.language);
-  app.setLoginItemSettings({ openAtLogin: settings.launchAtStartup });
+  manageStartupShortcut(settings.launchAtStartup);
   if (state === 'working') remainingMs = settings.workIntervalMinutes * 60 * 1000;
   rebuildTrayMenu();
   updateTrayTooltip();
@@ -250,7 +285,9 @@ ipcMain.handle('stats:get', () => ({ breaksToday: stats.getToday() }));
 app.whenReady().then(() => {
   tray = new Tray(createTrayIcon());
   rebuildTrayMenu();
-  app.setLoginItemSettings({ openAtLogin: settings.launchAtStartup });
+  // Clear any old registry-based startup entry left by previous builds
+  app.setLoginItemSettings({ openAtLogin: false });
+  manageStartupShortcut(settings.launchAtStartup);
   startWorkPhase();
   tickInterval = setInterval(tick, 1000);
   app.on('window-all-closed', (e) => e.preventDefault());
