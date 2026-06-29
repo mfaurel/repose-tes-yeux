@@ -2,17 +2,11 @@ const LABELS = {
   'fr-FR': {
     pageTitle:    'Paramètres',
     secTimer:     'Minuterie',
-    secOverlay:   'Overlay',
     secAdvanced:  'Pauses avancées',
     secShortcuts: 'Raccourcis clavier',
     secSystem:    'Système',
     lblInterval:        'Intervalle de travail (minutes)',
     lblDuration:        'Durée de la pause (secondes)',
-    lblDistance:        'Distance de regard (mètres)',
-    lblMessage:         'Message personnalisé',
-    msgPlaceholder:     'Laisse vide pour le message par défaut',
-    lblDismissible:     'Afficher le bouton « Passer »',
-    lblExercises:       'Afficher un exercice pendant la pause',
     lblLongBreakEvery:  'Grande pause toutes les N pauses (0 = désactivé)',
     lblLongBreakDur:    'Durée de la grande pause (secondes)',
     lblPosture:         'Rappel de posture toutes les N minutes (0 = désactivé)',
@@ -35,17 +29,11 @@ const LABELS = {
   'en-GB': {
     pageTitle:    'Settings',
     secTimer:     'Timer',
-    secOverlay:   'Overlay',
     secAdvanced:  'Advanced breaks',
     secShortcuts: 'Keyboard shortcuts',
     secSystem:    'System',
     lblInterval:        'Work interval (minutes)',
     lblDuration:        'Break duration (seconds)',
-    lblDistance:        'Gaze distance (metres)',
-    lblMessage:         'Custom message',
-    msgPlaceholder:     'Leave empty for the default message',
-    lblDismissible:     'Show Skip button',
-    lblExercises:       'Show an exercise during breaks',
     lblLongBreakEvery:  'Long break every N breaks (0 = disabled)',
     lblLongBreakDur:    'Long break duration (seconds)',
     lblPosture:         'Posture reminder every N minutes (0 = disabled)',
@@ -71,16 +59,11 @@ function applyLabels(lang) {
   const L = LABELS[lang] ?? LABELS['fr-FR'];
   document.getElementById('pageTitle').textContent   = L.pageTitle;
   document.getElementById('secTimer').textContent    = L.secTimer;
-  document.getElementById('secOverlay').textContent  = L.secOverlay;
   document.getElementById('secAdvanced').textContent = L.secAdvanced;
   document.getElementById('secShortcuts').textContent = L.secShortcuts;
   document.getElementById('secSystem').textContent   = L.secSystem;
   document.getElementById('lblInterval').textContent  = L.lblInterval;
   document.getElementById('lblDuration').textContent  = L.lblDuration;
-  document.getElementById('lblDistance').textContent  = L.lblDistance;
-  document.getElementById('lblMessage').textContent   = L.lblMessage;
-  document.getElementById('lblDismissible').textContent = L.lblDismissible;
-  document.getElementById('lblExercises').textContent   = L.lblExercises;
   document.getElementById('lblLongBreakEvery').textContent = L.lblLongBreakEvery;
   document.getElementById('lblLongBreakDur').textContent   = L.lblLongBreakDur;
   document.getElementById('lblPosture').textContent   = L.lblPosture;
@@ -95,7 +78,6 @@ function applyLabels(lang) {
   document.getElementById('lblDndEnd').textContent    = L.lblDndEnd;
   document.getElementById('saveBtn').textContent      = L.btnSave;
   document.getElementById('cancelBtn').textContent    = L.btnCancel;
-  document.getElementById('overlayMessage').placeholder = L.msgPlaceholder;
   document.getElementById('shortcutPause').placeholder  = L.shortcutPlaceholder;
   document.getElementById('shortcutBreak').placeholder  = L.shortcutPlaceholder;
 
@@ -120,10 +102,6 @@ async function init() {
   // Populate fields
   document.getElementById('workIntervalMinutes').value       = settings.workIntervalMinutes;
   document.getElementById('breakDurationSeconds').value      = settings.breakDurationSeconds;
-  document.getElementById('distanceMetres').value            = settings.distanceMetres;
-  document.getElementById('overlayMessage').value            = settings.overlayMessage ?? '';
-  document.getElementById('overlayDismissible').checked      = settings.overlayDismissible;
-  document.getElementById('exercisesEnabled').checked        = settings.exercisesEnabled ?? true;
   document.getElementById('longBreakEvery').value            = settings.longBreakEvery ?? 0;
   document.getElementById('longBreakDurationSeconds').value  = settings.longBreakDurationSeconds ?? 300;
   document.getElementById('postureReminderMinutes').value    = settings.postureReminderMinutes ?? 0;
@@ -140,7 +118,6 @@ async function init() {
   // Range live values
   bindRange('workIntervalMinutes');
   bindRange('breakDurationSeconds');
-  bindRange('distanceMetres');
   bindRange('longBreakEvery');
   bindRange('longBreakDurationSeconds');
   bindRange('postureReminderMinutes');
@@ -158,10 +135,6 @@ async function init() {
     const updated = {
       workIntervalMinutes:      parseInt(document.getElementById('workIntervalMinutes').value, 10),
       breakDurationSeconds:     parseInt(document.getElementById('breakDurationSeconds').value, 10),
-      distanceMetres:           parseInt(document.getElementById('distanceMetres').value, 10),
-      overlayMessage:           document.getElementById('overlayMessage').value.trim(),
-      overlayDismissible:       document.getElementById('overlayDismissible').checked,
-      exercisesEnabled:         document.getElementById('exercisesEnabled').checked,
       longBreakEvery:           parseInt(document.getElementById('longBreakEvery').value, 10),
       longBreakDurationSeconds: parseInt(document.getElementById('longBreakDurationSeconds').value, 10),
       postureReminderMinutes:   parseInt(document.getElementById('postureReminderMinutes').value, 10),
