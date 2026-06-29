@@ -7,17 +7,17 @@ Les contributions sont les bienvenues — ouvrir une issue avant de commencer un
 
 ## v2.x — UX & accessibilité
 
-- [ ] **Statistiques globales cumulés** - Calcul de statistiques  
-- [ ] "Mettre en pause" à renommer en "Arreter temporairement" car confusion et renommer "Pause maintenant" à "Faire une pause"
-- [ ] **Raccourcis clavier globaux** — `Ctrl+Alt+P` pour pause/reprise, `Ctrl+Alt+B` pour break immédiat, configurables dans les paramètres (hook clavier bas niveau via `RegisterHotKey`)
-- [ ] **Animations d'ouverture/fermeture** — fondu entrant/sortant de l'overlay (fade-in 300 ms, fade-out 200 ms) ; option de désactivation pour les utilisateurs sensibles aux animations
-- [ ] **Exercices guidés** — affichage d'un exercice oculaire ou d'étirement aléatoire pendant la pause (bibliothèque d'exercices configurable, extensible via fichier JSON externe)
-- [ ] **Thème clair / sombre** — détection du thème Windows (`UxTheme`) et application d'un schéma de couleurs cohérent sur l'overlay et le formulaire de paramètres
-- [ ] **Rappels de posture** — variante de pause courte dédiée à la posture (dos, poignets) ; message et fréquence indépendants de la règle 20/20/20
-- [ ] **Export des statistiques** — export CSV ou JSON de l'historique complet depuis `StatsForm` (date, nombre de pauses, durée cumulée)
-- [ ] **Notifications Toast natives** — migration des balloon tips vers l'API Windows Toast (`Windows.UI.Notifications`) pour un rendu moderne sur Windows 10/11
-- [ ] **Prévoir une pause plus longue** toutes les x pauses
-- [ ] Synchroniser les pauses pour que la dernière pause arrive à 11h55 (configurable) en comptant les temps de pause pour aller manger.
+- [x] **Statistiques globales cumulés** - Historique persistant par jour, total toutes périodes, fenêtre stats redessinée (fenêtre 480×520)
+- [x] "Mettre en pause" renommé en "Arrêter temporairement" et "Pause maintenant" renommé en "Faire une pause"
+- [x] **Raccourcis clavier globaux** — `Ctrl+Alt+P` pour pause/reprise, `Ctrl+Alt+B` pour break immédiat, configurables dans les paramètres (`globalShortcut` Electron)
+- [x] **Animations d'ouverture/fermeture** — fondu entrant 300 ms / fondu sortant 200 ms sur l'overlay ; classe `.fading-out` CSS
+- [x] **Exercices guidés** — exercice oculaire ou d'étirement aléatoire affiché pendant la pause (`exercises.json` extensible)
+- [x] **Thème clair / sombre** — détection du thème Windows via `nativeTheme` + `@media (prefers-color-scheme)` ; option manuelle (auto / sombre / clair) dans les paramètres
+- [x] **Rappels de posture** — notification Toast native périodique (intervalle en minutes, configurable, désactivable)
+- [x] **Export des statistiques** — export CSV ou JSON depuis la fenêtre Statistiques via `dialog.showSaveDialog`
+- [x] **Notifications Toast natives** — `electron.Notification` pour les rappels de posture (API Windows Toast sur Windows 10/11)
+- [x] **Prévoir une pause plus longue** toutes les x pauses — paramètres `longBreakEvery` + `longBreakDurationSeconds`, tray icon vert pendant grande pause
+- [x] Synchroniser les pauses pour que la dernière pause arrive à l'heure cible — paramètre `endOfDayTarget` (HH:MM), ajustement dynamique de l'intervalle de travail
 
 ---
 

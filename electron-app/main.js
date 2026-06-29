@@ -1,4 +1,7 @@
-const { app, BrowserWindow, screen, Tray, Menu, nativeImage, ipcMain } = require('electron');
+const {
+  app, BrowserWindow, screen, Tray, Menu, nativeImage,
+  ipcMain, globalShortcut, nativeTheme, Notification, dialog,
+} = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
@@ -7,7 +10,7 @@ const { execSync } = require('child_process');
 if (!app.requestSingleInstanceLock()) { app.quit(); }
 
 const { load: loadSettings, save: saveSettings } = require('./src/settings');
-const { t, setLanguage } = require('./src/i18n');
+const { t, tArr, setLanguage } = require('./src/i18n');
 const stats = require('./src/stats');
 
 // ── State ──────────────────────────────────────────────────────────────────
@@ -16,6 +19,10 @@ let state = 'working'; // 'working' | 'break' | 'paused'
 let remainingMs = 0;
 let pausedRemainingMs = 0;
 let tickInterval = null;
+let breakCountToday = 0;
+let isCurrentBreakLong = false;
+let currentBreakExercise = null;
+let postureIntervalId = null;
 
 let overlayWindows = [];
 let settingsWindow = null;
@@ -24,22 +31,37 @@ let tray = null;
 
 setLanguage(settings.language);
 
-// ── Startup shortcut management ────────────────────────────────────────────
+// ── Exercises ─────────────────────────────────────────────────────────────
+const exercisesPath = path.join(__dirname, 'exercises.json');
+let exercises = { eye: [], stretch: [] };
+try { exercises = JSON.parse(fs.readFileSync(exercisesPath, 'utf8')); } catch (_) {}
 
+function getRandomExercise() {
+  if (!settings.exercisesEnabled) return null;
+  const all = [...exercises.eye, ...exercises.stretch];
+  if (!all.length) return null;
+  const ex = all[Math.floor(Math.random() * all.length)];
+  const langKey = settings.language === 'en-GB' ? 'en' : 'fr';
+  return ex[langKey] || ex.fr || ex.en || null;
+}
+
+// ── Theme ─────────────────────────────────────────────────────────────────
+function applyTheme() {
+  nativeTheme.themeSource = settings.theme === 'auto' ? 'system' : settings.theme;
+}
+
+// ── Startup shortcut management ────────────────────────────────────────────
 function manageStartupShortcut(enable) {
   const lnkPath = path.join(
     process.env.APPDATA,
     'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup',
     'ReposeTeYeux.lnk'
   );
-
   if (!enable) {
     try { if (fs.existsSync(lnkPath)) fs.unlinkSync(lnkPath); } catch (_) {}
     return;
   }
-
   if (fs.existsSync(lnkPath)) return;
-
   const vbsPath = path.resolve(app.getAppPath(), '..', 'Lancer.vbs');
   const scriptDir = path.dirname(vbsPath);
   const psScript = `
@@ -58,7 +80,6 @@ $lnk.Save()
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-
 function fmt(ms) {
   const totalSec = Math.max(0, Math.ceil(ms / 1000));
   const m = Math.floor(totalSec / 60);
@@ -78,6 +99,25 @@ function isInDND() {
   return s <= e ? nowM >= s && nowM <= e : nowM >= s || nowM <= e;
 }
 
+// Compute work interval respecting end-of-day target
+function computeWorkMs() {
+  const normalMs = settings.workIntervalMinutes * 60 * 1000;
+  if (!settings.endOfDayTarget) return normalMs;
+  const [th, tm] = settings.endOfDayTarget.split(':').map(Number);
+  if (isNaN(th) || isNaN(tm)) return normalMs;
+  const now = new Date();
+  const target = new Date();
+  target.setHours(th, tm, 0, 0);
+  if (target <= now) return normalMs;
+  const msUntilTarget = target - now;
+  const breakMs = settings.breakDurationSeconds * 1000;
+  // Shrink work interval if the next break would overshoot the target
+  if (normalMs + breakMs >= msUntilTarget) {
+    return Math.max(60 * 1000, msUntilTarget - breakMs);
+  }
+  return normalMs;
+}
+
 // 3-col × 5-row bitmap font for tray timer (MSB = left column)
 const BITMAP_FONT = {
   '0': [0b111, 0b101, 0b101, 0b101, 0b111],
@@ -93,45 +133,33 @@ const BITMAP_FONT = {
   ':': [0b000, 0b010, 0b000, 0b010, 0b000],
 };
 
-// 32×32 icon with 2-digit countdown at 3× scale — much more readable than MM:SS
-// Working: teal on dark blue | Break: orange on dark amber | Paused: gray on dark
-// Last minute of work: red on dark red (urgent visual cue)
 function createTimerIcon(ms, currentState) {
   const size = 32, scale = 3;
-  const charW = 3 * scale; // 9px per digit
-  const charH = 5 * scale; // 15px tall
-
+  const charW = 3 * scale;
+  const charH = 5 * scale;
   const totalSec = Math.max(0, Math.ceil(ms / 1000));
   const isLastMinute = currentState === 'working' && totalSec < 60;
-
-  // Show minutes when ≥60s; show seconds when <60s (last minute or break countdown)
   const val = totalSec >= 60 ? Math.min(99, Math.floor(totalSec / 60)) : (totalSec % 60);
   const text = val.toString().padStart(2, '0');
-
-  const totalW = 2 * charW + 1; // 19px (1px gap between digits)
-  const xStart = Math.floor((size - totalW) / 2); // 6
-  const yStart = Math.floor((size - charH) / 2);  // 8
-
+  const totalW = 2 * charW + 1;
+  const xStart = Math.floor((size - totalW) / 2);
+  const yStart = Math.floor((size - charH) / 2);
   let bgR, bgG, bgB, fgR, fgG, fgB;
-  if (currentState === 'break') {
-    [bgR, bgG, bgB] = [40, 18, 0];
-    [fgR, fgG, fgB] = [255, 152, 0];
+  if (currentState === 'break' && isCurrentBreakLong) {
+    [bgR, bgG, bgB] = [8, 30, 12];  [fgR, fgG, fgB] = [102, 187, 106];
+  } else if (currentState === 'break') {
+    [bgR, bgG, bgB] = [40, 18, 0];  [fgR, fgG, fgB] = [255, 152, 0];
   } else if (currentState === 'paused') {
-    [bgR, bgG, bgB] = [22, 22, 22];
-    [fgR, fgG, fgB] = [130, 130, 130];
+    [bgR, bgG, bgB] = [22, 22, 22]; [fgR, fgG, fgB] = [130, 130, 130];
   } else if (isLastMinute) {
-    [bgR, bgG, bgB] = [42, 8, 8];
-    [fgR, fgG, fgB] = [255, 60, 60];
+    [bgR, bgG, bgB] = [42, 8, 8];   [fgR, fgG, fgB] = [255, 60, 60];
   } else {
-    [bgR, bgG, bgB] = [10, 26, 38];
-    [fgR, fgG, fgB] = [79, 195, 247];
+    [bgR, bgG, bgB] = [10, 26, 38]; [fgR, fgG, fgB] = [79, 195, 247];
   }
-
   const buf = Buffer.alloc(size * size * 4, 0);
   for (let i = 0; i < size * size; i++) {
     buf[i * 4] = bgR; buf[i * 4 + 1] = bgG; buf[i * 4 + 2] = bgB; buf[i * 4 + 3] = 255;
   }
-
   for (let ci = 0; ci < 2; ci++) {
     const rows = BITMAP_FONT[text[ci]];
     if (!rows) continue;
@@ -152,12 +180,10 @@ function createTimerIcon(ms, currentState) {
       }
     }
   }
-
   return nativeImage.createFromBuffer(buf, { width: size, height: size });
 }
 
 // ── Tray ───────────────────────────────────────────────────────────────────
-
 function buildTrayMenu() {
   return Menu.buildFromTemplate([
     {
@@ -180,11 +206,12 @@ function buildTrayMenu() {
 
 function updateTray() {
   if (!tray) return;
-  const template =
-    state === 'break'  ? t('tray_tooltip_break') :
-    state === 'paused' ? t('tray_tooltip_paused') :
-                         t('tray_tooltip_working');
-  tray.setToolTip(template.replace('{0}', fmt(remainingMs)));
+  const tooltipKey =
+    state === 'break' && isCurrentBreakLong ? 'tray_tooltip_long_break' :
+    state === 'break'  ? 'tray_tooltip_break' :
+    state === 'paused' ? 'tray_tooltip_paused' :
+                         'tray_tooltip_working';
+  tray.setToolTip(t(tooltipKey).replace('{0}', fmt(remainingMs)));
   tray.setImage(createTimerIcon(remainingMs, state));
 }
 
@@ -192,34 +219,76 @@ function rebuildTrayMenu() {
   if (tray) tray.setContextMenu(buildTrayMenu());
 }
 
-// ── Timer state machine ────────────────────────────────────────────────────
+// ── Posture reminder ───────────────────────────────────────────────────────
+function showPostureNotification() {
+  if (!Notification.isSupported()) return;
+  const tips = tArr('posture_tips');
+  const tip = tips.length ? tips[Math.floor(Math.random() * tips.length)] : '';
+  new Notification({ title: t('posture_title'), body: tip }).show();
+}
 
+function resetPostureTimer() {
+  if (postureIntervalId) { clearInterval(postureIntervalId); postureIntervalId = null; }
+  if (settings.postureReminderMinutes > 0) {
+    postureIntervalId = setInterval(() => {
+      if (state !== 'break') showPostureNotification();
+    }, settings.postureReminderMinutes * 60 * 1000);
+  }
+}
+
+// ── Global shortcuts ───────────────────────────────────────────────────────
+function registerShortcuts() {
+  globalShortcut.unregisterAll();
+  if (settings.shortcutPause) {
+    try {
+      globalShortcut.register(settings.shortcutPause, () => {
+        state === 'paused' ? resumeWork() : pauseWork();
+      });
+    } catch (_) {}
+  }
+  if (settings.shortcutBreak) {
+    try {
+      globalShortcut.register(settings.shortcutBreak, () => {
+        if (state === 'working') triggerBreak();
+      });
+    } catch (_) {}
+  }
+}
+
+// ── Timer state machine ────────────────────────────────────────────────────
 function startWorkPhase() {
   state = 'working';
-  remainingMs = settings.workIntervalMinutes * 60 * 1000;
+  remainingMs = computeWorkMs();
   rebuildTrayMenu();
   updateTray();
 }
 
 function triggerBreak() {
-  if (isInDND()) {
-    startWorkPhase();
-    return;
-  }
+  if (isInDND()) { startWorkPhase(); return; }
+  breakCountToday++;
+  isCurrentBreakLong = settings.longBreakEvery > 0
+    && (breakCountToday % settings.longBreakEvery === 0);
+  const durationSec = isCurrentBreakLong
+    ? settings.longBreakDurationSeconds
+    : settings.breakDurationSeconds;
+  currentBreakExercise = getRandomExercise();
   state = 'break';
-  remainingMs = settings.breakDurationSeconds * 1000;
-  stats.increment();
+  remainingMs = durationSec * 1000;
+  stats.increment(durationSec);
   createOverlays();
   rebuildTrayMenu();
   updateTray();
 }
 
 function endBreak() {
-  // Ask overlays to play end-sound, then close after brief delay
+  // Send end-sound and fade-out simultaneously; destroy windows after 300 ms
   for (const win of overlayWindows) {
-    if (!win.isDestroyed()) win.webContents.send('overlay:end-sound');
+    if (!win.isDestroyed()) {
+      win.webContents.send('overlay:end-sound');
+      win.webContents.send('overlay:fade-out');
+    }
   }
-  setTimeout(closeOverlays, 300);
+  setTimeout(destroyOverlays, 300);
   startWorkPhase();
 }
 
@@ -250,9 +319,8 @@ function tick() {
 }
 
 // ── Overlay windows ────────────────────────────────────────────────────────
-
 function createOverlays() {
-  closeOverlays();
+  destroyOverlays();
   for (const display of screen.getAllDisplays()) {
     const { x, y, width, height } = display.bounds;
     const win = new BrowserWindow({
@@ -273,7 +341,7 @@ function createOverlays() {
   }
 }
 
-function closeOverlays() {
+function destroyOverlays() {
   for (const win of overlayWindows) {
     if (!win.isDestroyed()) win.close();
   }
@@ -281,13 +349,12 @@ function closeOverlays() {
 }
 
 // ── Secondary windows ──────────────────────────────────────────────────────
-
 function openSettings() {
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.focus(); return;
   }
   settingsWindow = new BrowserWindow({
-    width: 480, height: 610,
+    width: 480, height: 780,
     resizable: false, skipTaskbar: false,
     title: t('settings_title'),
     webPreferences: {
@@ -304,7 +371,7 @@ function openStats() {
     statsWindow.focus(); return;
   }
   statsWindow = new BrowserWindow({
-    width: 320, height: 200,
+    width: 480, height: 520,
     resizable: false, skipTaskbar: false,
     title: t('stats_title'),
     webPreferences: {
@@ -317,14 +384,17 @@ function openStats() {
 }
 
 // ── IPC handlers ───────────────────────────────────────────────────────────
-
 ipcMain.handle('overlay:config', () => ({
   dismissible:     settings.overlayDismissible,
   soundEnabled:    settings.soundEnabled,
   distanceMetres:  settings.distanceMetres,
   overlayMessage:  settings.overlayMessage,
   language:        settings.language,
-  breakDurationMs: settings.breakDurationSeconds * 1000,
+  breakDurationMs: (isCurrentBreakLong
+    ? settings.longBreakDurationSeconds
+    : settings.breakDurationSeconds) * 1000,
+  exercise:        currentBreakExercise,
+  isLongBreak:     isCurrentBreakLong,
 }));
 
 ipcMain.on('overlay:dismiss', () => {
@@ -337,23 +407,56 @@ ipcMain.handle('settings:save', (_, newSettings) => {
   settings = { ...settings, ...newSettings };
   saveSettings(settings);
   setLanguage(settings.language);
+  applyTheme();
   manageStartupShortcut(settings.launchAtStartup);
-  if (state === 'working') remainingMs = settings.workIntervalMinutes * 60 * 1000;
+  registerShortcuts();
+  resetPostureTimer();
+  if (state === 'working') remainingMs = computeWorkMs();
   rebuildTrayMenu();
   updateTray();
   return { ok: true };
 });
 
-ipcMain.handle('stats:get', () => ({ breaksToday: stats.getToday() }));
+ipcMain.handle('stats:get', () => ({
+  breaksToday: stats.getToday(),
+}));
+
+ipcMain.handle('stats:getAll', () => stats.getAll());
+
+ipcMain.handle('stats:export', async (_, format) => {
+  const all = stats.getAll();
+  const defaultName = `repose-tes-yeux-stats.${format}`;
+  const parent = statsWindow && !statsWindow.isDestroyed() ? statsWindow : null;
+  const result = await dialog.showSaveDialog(parent, {
+    defaultPath: defaultName,
+    filters: format === 'csv'
+      ? [{ name: 'CSV', extensions: ['csv'] }]
+      : [{ name: 'JSON', extensions: ['json'] }],
+  });
+  if (result.canceled || !result.filePath) return { ok: false };
+  let content;
+  if (format === 'csv') {
+    const rows = [['Date', 'Pauses', 'Durée totale (s)']];
+    for (const e of all.history) {
+      rows.push([e.date, e.breaks, e.totalPauseSec]);
+    }
+    content = rows.map(r => r.join(',')).join('\r\n');
+  } else {
+    content = JSON.stringify(all, null, 2);
+  }
+  fs.writeFileSync(result.filePath, content, 'utf8');
+  return { ok: true };
+});
 
 // ── App lifecycle ──────────────────────────────────────────────────────────
-
 app.whenReady().then(() => {
+  applyTheme();
   tray = new Tray(createTimerIcon(settings.workIntervalMinutes * 60 * 1000, 'working'));
   rebuildTrayMenu();
-  // Clear any old registry-based startup entry left by previous builds
   app.setLoginItemSettings({ openAtLogin: false });
   manageStartupShortcut(settings.launchAtStartup);
+  registerShortcuts();
+  resetPostureTimer();
   startWorkPhase();
   tickInterval = setInterval(tick, 1000);
   app.on('window-all-closed', (e) => e.preventDefault());
@@ -361,5 +464,7 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   clearInterval(tickInterval);
-  closeOverlays();
+  if (postureIntervalId) clearInterval(postureIntervalId);
+  globalShortcut.unregisterAll();
+  destroyOverlays();
 });

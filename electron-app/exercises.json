@@ -1,0 +1,20 @@
+{
+  "eye": [
+    { "fr": "Fermez les yeux doucement pendant 10 secondes", "en": "Gently close your eyes for 10 seconds" },
+    { "fr": "Regardez vers le haut, puis vers le bas — 3 fois", "en": "Look up then down — 3 times" },
+    { "fr": "Regardez à gauche, puis à droite — 3 fois", "en": "Look left then right — 3 times" },
+    { "fr": "Faites tourner vos yeux en cercle dans chaque sens", "en": "Roll your eyes in a circle in each direction" },
+    { "fr": "Clignez rapidement 10 fois pour humidifier vos yeux", "en": "Blink rapidly 10 times to moisten your eyes" },
+    { "fr": "Frottez vos paumes et posez-les sur vos yeux fermés (10 s)", "en": "Rub palms and cup them over closed eyes (10 s)" },
+    { "fr": "Alternez le focus : objet proche (30 cm) puis lointain (6 m)", "en": "Alternate focus: near object (30 cm) then far (6 m)" },
+    { "fr": "Dessinez un 8 imaginaire avec vos yeux, lentement", "en": "Trace an imaginary figure-8 with your eyes, slowly" }
+  ],
+  "stretch": [
+    { "fr": "Roulez doucement vos épaules vers l'arrière — 5 fois", "en": "Gently roll your shoulders backward — 5 times" },
+    { "fr": "Inclinez la tête de chaque côté, tenez 10 secondes", "en": "Tilt your head to each side, hold 10 seconds" },
+    { "fr": "Pliez vos poignets vers l'avant et vers l'arrière", "en": "Bend your wrists forward and backward" },
+    { "fr": "Levez les bras au-dessus de la tête et étirez-vous", "en": "Raise your arms overhead and stretch" },
+    { "fr": "Serrez les poings fort 5 secondes, puis relâchez", "en": "Squeeze fists tight for 5 seconds, then release" },
+    { "fr": "Faites des cercles avec vos chevilles (assis ou debout)", "en": "Rotate your ankles in circles (seated or standing)" }
+  ]
+}

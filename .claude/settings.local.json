@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npx skills *)",
       "Bash(dir C:\\\\workspace\\\\repose-tes-yeux *)",
-      "Bash(npx electron *)"
+      "Bash(npx electron *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\workspace\\\\github\\\\repose-tes-yeux\" -Recurse -Force)",
+      "Bash(Select-Object -Property FullName, PSIsContainer)",
+      "Bash(ConvertTo-Csv -NoTypeInformation)",
+      "Bash(Out-String)"
     ]
   }
 }

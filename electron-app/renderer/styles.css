@@ -13,6 +13,16 @@
   --radius: 24px;
 }
 
+@media (prefers-color-scheme: light) {
+  :root {
+    --accent: #0277bd;
+    --accent-glow: rgba(2, 119, 189, 0.35);
+    --bg-dark: rgba(230, 245, 255, 0.93);
+    --text: #062038;
+    --text-muted: rgba(6, 32, 56, 0.6);
+  }
+}
+
 html, body {
   width: 100%;
   height: 100%;
@@ -31,12 +41,21 @@ html, body {
   background: var(--bg-dark);
   backdrop-filter: blur(12px) saturate(1.4);
   -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  animation: fadeIn 0.5s ease;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.overlay.fading-out {
+  animation: fadeOut 0.2s ease forwards;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
 /* ── Decorative pulsing rings ── */
@@ -63,20 +82,41 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
-  padding: 48px 56px;
+  gap: 22px;
+  padding: 44px 52px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(79, 195, 247, 0.2);
   border-radius: var(--radius);
   box-shadow:
     0 0 60px rgba(79, 195, 247, 0.12),
     0 24px 64px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-color-scheme: light) {
+  .card {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(2, 119, 189, 0.2);
+    box-shadow: 0 0 40px rgba(2, 119, 189, 0.1), 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
 }
 
 @keyframes slideUp {
   from { transform: translateY(24px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Long break badge ── */
+.long-break-badge {
+  padding: 4px 14px;
+  background: rgba(102, 187, 106, 0.15);
+  border: 1px solid rgba(102, 187, 106, 0.4);
+  border-radius: 100px;
+  color: #66bb6a;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /* ── Eye SVG ── */
@@ -137,6 +177,13 @@ html, body {
   font-weight: 600;
 }
 
+.custom-msg {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  text-align: center;
+  font-style: italic;
+}
+
 /* ── Countdown ring ── */
 .timer-ring {
   position: relative;
@@ -154,6 +201,10 @@ html, body {
   fill: none;
   stroke: rgba(255, 255, 255, 0.07);
   stroke-width: 6;
+}
+
+@media (prefers-color-scheme: light) {
+  .track { stroke: rgba(0, 0, 0, 0.07); }
 }
 
 .progress {
@@ -177,6 +228,41 @@ html, body {
   font-size: 2rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* ── Exercise box ── */
+.exercise-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  background: rgba(79, 195, 247, 0.06);
+  border: 1px solid rgba(79, 195, 247, 0.18);
+  border-radius: 12px;
+  max-width: 360px;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: light) {
+  .exercise-box {
+    background: rgba(2, 119, 189, 0.05);
+    border-color: rgba(2, 119, 189, 0.2);
+  }
+}
+
+.exercise-label {
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.exercise-text {
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 /* ── Dismiss button ── */

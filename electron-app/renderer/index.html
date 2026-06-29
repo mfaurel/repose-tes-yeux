@@ -23,6 +23,8 @@
         </svg>
       </div>
 
+      <div class="long-break-badge" id="longBreakBadge" style="display:none"></div>
+
       <h1 class="title" id="overlayTitle">Repose tes yeux</h1>
       <p  class="rule"  id="overlayRule">Regarde quelque chose à <span class="highlight" id="distance">20</span> mètres</p>
       <p  class="custom-msg" id="customMsg" style="display:none"></p>
@@ -33,6 +35,11 @@
           <circle class="progress" cx="60" cy="60" r="52" id="progressCircle" />
         </svg>
         <div class="countdown" id="countdown">20</div>
+      </div>
+
+      <div class="exercise-box" id="exerciseBox" style="display:none">
+        <span class="exercise-label" id="exerciseLabel">Exercice suggéré</span>
+        <span class="exercise-text"  id="exerciseText"></span>
       </div>
 
       <!-- Hidden by default; shown only when overlayDismissible === true -->

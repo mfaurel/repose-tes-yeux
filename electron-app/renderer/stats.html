@@ -8,9 +8,25 @@
 
     :root {
       --accent: #4fc3f7;
+      --accent-dim: rgba(79, 195, 247, 0.12);
+      --accent-border: rgba(79, 195, 247, 0.2);
       --bg:     #0d1628;
+      --surface: rgba(255, 255, 255, 0.04);
       --text:   #e0f7ff;
       --text-muted: rgba(224, 247, 255, 0.55);
+      --green: #66bb6a;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --accent: #0277bd;
+        --accent-dim: rgba(2, 119, 189, 0.08);
+        --accent-border: rgba(2, 119, 189, 0.2);
+        --bg: #f0f8ff;
+        --surface: rgba(0, 0, 0, 0.03);
+        --text: #0d1628;
+        --text-muted: rgba(13, 22, 40, 0.55);
+      }
     }
 
     html, body {
@@ -18,46 +34,182 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'Segoe UI', system-ui, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      font-size: 13px;
+      overflow-y: auto;
     }
 
-    .card {
-      text-align: center;
-      padding: 32px 40px;
-      border: 1px solid rgba(79, 195, 247, 0.2);
-      border-radius: 16px;
-      background: rgba(255,255,255,0.04);
+    .page {
+      padding: 20px 20px 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
 
-    .label {
+    .page-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text);
+      border-bottom: 1px solid var(--accent-border);
+      padding-bottom: 10px;
+    }
+
+    /* ── Stat cards row ── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--accent-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
     }
 
-    .count {
-      font-size: 3rem;
+    .stat-value {
+      font-size: 2rem;
       font-weight: 700;
       color: var(--accent);
       font-variant-numeric: tabular-nums;
-      filter: drop-shadow(0 0 12px rgba(79, 195, 247, 0.5));
+      filter: drop-shadow(0 0 8px rgba(79, 195, 247, 0.4));
+      line-height: 1;
     }
+
+    .stat-sub {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    /* ── History section ── */
+    .section-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .history-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      text-align: left;
+      padding: 4px 6px;
+      border-bottom: 1px solid var(--accent-border);
+    }
+
+    .history-table td {
+      padding: 5px 6px;
+      color: var(--text);
+      border-bottom: 1px solid rgba(79, 195, 247, 0.07);
+    }
+
+    .history-table tr:last-child td { border-bottom: none; }
+
+    .history-table td:nth-child(2),
+    .history-table td:nth-child(3) {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+    }
+
+    .no-history {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      text-align: center;
+      padding: 12px;
+    }
+
+    /* ── Export ── */
+    .export-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .export-label {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      flex: 1;
+    }
+
+    .btn-export {
+      padding: 7px 16px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+      border: 1px solid var(--accent-border);
+      color: var(--text-muted);
+    }
+
+    .btn-export:hover {
+      border-color: var(--accent);
+      color: var(--text);
+      background: var(--accent-dim);
+    }
+
+    .btn-export:active { transform: scale(0.97); }
 
     .close-hint {
       color: var(--text-muted);
-      font-size: 0.75rem;
-      margin-top: 4px;
+      font-size: 0.72rem;
+      text-align: center;
+      margin-top: 2px;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <p class="label"  id="label">Pauses aujourd'hui</p>
-    <p class="count"  id="count">—</p>
+  <div class="page">
+    <p class="page-title" id="pageTitle">Statistiques</p>
+
+    <!-- Today + all-time -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <span class="stat-label" id="lblToday">Aujourd'hui</span>
+        <span class="stat-value" id="countToday">—</span>
+        <span class="stat-sub"  id="subToday"></span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label" id="lblTotal">Total</span>
+        <span class="stat-value" id="countTotal">—</span>
+        <span class="stat-sub"  id="subTotal"></span>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div>
+      <p class="section-title" id="lblHistory">Historique (7 derniers jours)</p>
+      <div id="historyContainer">
+        <p class="no-history" id="noHistory">Aucune donnée</p>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="export-row">
+      <span class="export-label" id="lblExport">Exporter :</span>
+      <button class="btn-export" id="exportCsv">CSV</button>
+      <button class="btn-export" id="exportJson">JSON</button>
+    </div>
+
     <p class="close-hint" id="hint">Appuyez sur Échap pour fermer</p>
   </div>
   <script src="stats-renderer.js"></script>

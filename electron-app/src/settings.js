@@ -13,6 +13,14 @@ const DEFAULTS = {
   soundEnabled: true,
   doNotDisturbStart: '',
   doNotDisturbEnd: '',
+  longBreakEvery: 0,
+  longBreakDurationSeconds: 300,
+  postureReminderMinutes: 0,
+  endOfDayTarget: '',
+  shortcutPause: 'Ctrl+Alt+P',
+  shortcutBreak: 'Ctrl+Alt+B',
+  exercisesEnabled: true,
+  theme: 'auto',
 };
 
 function getPath() {

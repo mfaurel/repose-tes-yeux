@@ -47,11 +47,66 @@
         <input type="checkbox" id="overlayDismissible" />
         <label for="overlayDismissible" id="lblDismissible">Afficher le bouton « Passer »</label>
       </div>
+      <div class="field checkbox-field">
+        <input type="checkbox" id="exercisesEnabled" />
+        <label for="exercisesEnabled" id="lblExercises">Afficher un exercice pendant la pause</label>
+      </div>
+    </section>
+
+    <!-- Advanced breaks -->
+    <section class="section">
+      <h2 class="section-title" id="secAdvanced">Pauses avancées</h2>
+      <div class="field">
+        <label id="lblLongBreakEvery">Grande pause toutes les N pauses (0 = désactivé)</label>
+        <div class="range-row">
+          <input type="range" id="longBreakEvery" min="0" max="20" step="1" value="0" />
+          <span class="range-val" id="longBreakEveryVal">0</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lblLongBreakDur">Durée de la grande pause (secondes)</label>
+        <div class="range-row">
+          <input type="range" id="longBreakDurationSeconds" min="60" max="900" step="30" value="300" />
+          <span class="range-val" id="longBreakDurationSecondsVal">300</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lblPosture">Rappel de posture toutes les N minutes (0 = désactivé)</label>
+        <div class="range-row">
+          <input type="range" id="postureReminderMinutes" min="0" max="120" step="5" value="0" />
+          <span class="range-val" id="postureReminderMinutesVal">0</span>
+        </div>
+      </div>
+      <div class="field dnd-row">
+        <label id="lblEndOfDay">Heure cible de fin de journée</label>
+        <input type="time" id="endOfDayTarget" />
+      </div>
+    </section>
+
+    <!-- Keyboard shortcuts -->
+    <section class="section">
+      <h2 class="section-title" id="secShortcuts">Raccourcis clavier</h2>
+      <div class="field">
+        <label id="lblShortcutPause">Raccourci arrêt/reprise</label>
+        <input type="text" id="shortcutPause" placeholder="ex: Ctrl+Alt+P" />
+      </div>
+      <div class="field">
+        <label id="lblShortcutBreak">Raccourci pause immédiate</label>
+        <input type="text" id="shortcutBreak" placeholder="ex: Ctrl+Alt+B" />
+      </div>
     </section>
 
     <!-- System -->
     <section class="section">
       <h2 class="section-title" id="secSystem">Système</h2>
+      <div class="field">
+        <label id="lblTheme">Thème</label>
+        <select id="theme">
+          <option value="auto">Automatique (Windows)</option>
+          <option value="dark">Sombre</option>
+          <option value="light">Clair</option>
+        </select>
+      </div>
       <div class="field">
         <label id="lblLanguage">Langue</label>
         <select id="language">
