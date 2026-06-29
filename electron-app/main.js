@@ -78,16 +78,81 @@ function isInDND() {
   return s <= e ? nowM >= s && nowM <= e : nowM >= s || nowM <= e;
 }
 
-// 16×16 RGBA solid teal (#4fc3f7) — no external asset required
-function createTrayIcon() {
-  const size = 16;
-  const buf = Buffer.alloc(size * size * 4);
-  for (let i = 0; i < size * size; i++) {
-    buf[i * 4 + 0] = 79;   // R
-    buf[i * 4 + 1] = 195;  // G
-    buf[i * 4 + 2] = 247;  // B
-    buf[i * 4 + 3] = 255;  // A
+// 3-col × 5-row bitmap font for tray timer (MSB = left column)
+const BITMAP_FONT = {
+  '0': [0b111, 0b101, 0b101, 0b101, 0b111],
+  '1': [0b010, 0b110, 0b010, 0b010, 0b111],
+  '2': [0b111, 0b001, 0b111, 0b100, 0b111],
+  '3': [0b111, 0b001, 0b111, 0b001, 0b111],
+  '4': [0b101, 0b101, 0b111, 0b001, 0b001],
+  '5': [0b111, 0b100, 0b111, 0b001, 0b111],
+  '6': [0b111, 0b100, 0b111, 0b101, 0b111],
+  '7': [0b111, 0b001, 0b001, 0b010, 0b010],
+  '8': [0b111, 0b101, 0b111, 0b101, 0b111],
+  '9': [0b111, 0b101, 0b111, 0b001, 0b111],
+  ':': [0b000, 0b010, 0b000, 0b010, 0b000],
+};
+
+// 32×32 icon with 2-digit countdown at 3× scale — much more readable than MM:SS
+// Working: teal on dark blue | Break: orange on dark amber | Paused: gray on dark
+// Last minute of work: red on dark red (urgent visual cue)
+function createTimerIcon(ms, currentState) {
+  const size = 32, scale = 3;
+  const charW = 3 * scale; // 9px per digit
+  const charH = 5 * scale; // 15px tall
+
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
+  const isLastMinute = currentState === 'working' && totalSec < 60;
+
+  // Show minutes when ≥60s; show seconds when <60s (last minute or break countdown)
+  const val = totalSec >= 60 ? Math.min(99, Math.floor(totalSec / 60)) : (totalSec % 60);
+  const text = val.toString().padStart(2, '0');
+
+  const totalW = 2 * charW + 1; // 19px (1px gap between digits)
+  const xStart = Math.floor((size - totalW) / 2); // 6
+  const yStart = Math.floor((size - charH) / 2);  // 8
+
+  let bgR, bgG, bgB, fgR, fgG, fgB;
+  if (currentState === 'break') {
+    [bgR, bgG, bgB] = [40, 18, 0];
+    [fgR, fgG, fgB] = [255, 152, 0];
+  } else if (currentState === 'paused') {
+    [bgR, bgG, bgB] = [22, 22, 22];
+    [fgR, fgG, fgB] = [130, 130, 130];
+  } else if (isLastMinute) {
+    [bgR, bgG, bgB] = [42, 8, 8];
+    [fgR, fgG, fgB] = [255, 60, 60];
+  } else {
+    [bgR, bgG, bgB] = [10, 26, 38];
+    [fgR, fgG, fgB] = [79, 195, 247];
   }
+
+  const buf = Buffer.alloc(size * size * 4, 0);
+  for (let i = 0; i < size * size; i++) {
+    buf[i * 4] = bgR; buf[i * 4 + 1] = bgG; buf[i * 4 + 2] = bgB; buf[i * 4 + 3] = 255;
+  }
+
+  for (let ci = 0; ci < 2; ci++) {
+    const rows = BITMAP_FONT[text[ci]];
+    if (!rows) continue;
+    const cx = xStart + ci * (charW + 1);
+    for (let row = 0; row < 5; row++) {
+      const bits = rows[row];
+      for (let col = 0; col < 3; col++) {
+        if (!((bits >> (2 - col)) & 1)) continue;
+        for (let dy = 0; dy < scale; dy++) {
+          for (let dx = 0; dx < scale; dx++) {
+            const px = cx + col * scale + dx;
+            const py = yStart + row * scale + dy;
+            if (px < 0 || px >= size || py < 0 || py >= size) continue;
+            const i = (py * size + px) * 4;
+            buf[i] = fgR; buf[i + 1] = fgG; buf[i + 2] = fgB; buf[i + 3] = 255;
+          }
+        }
+      }
+    }
+  }
+
   return nativeImage.createFromBuffer(buf, { width: size, height: size });
 }
 
@@ -113,13 +178,14 @@ function buildTrayMenu() {
   ]);
 }
 
-function updateTrayTooltip() {
+function updateTray() {
   if (!tray) return;
   const template =
     state === 'break'  ? t('tray_tooltip_break') :
     state === 'paused' ? t('tray_tooltip_paused') :
                          t('tray_tooltip_working');
   tray.setToolTip(template.replace('{0}', fmt(remainingMs)));
+  tray.setImage(createTimerIcon(remainingMs, state));
 }
 
 function rebuildTrayMenu() {
@@ -132,7 +198,7 @@ function startWorkPhase() {
   state = 'working';
   remainingMs = settings.workIntervalMinutes * 60 * 1000;
   rebuildTrayMenu();
-  updateTrayTooltip();
+  updateTray();
 }
 
 function triggerBreak() {
@@ -145,7 +211,7 @@ function triggerBreak() {
   stats.increment();
   createOverlays();
   rebuildTrayMenu();
-  updateTrayTooltip();
+  updateTray();
 }
 
 function endBreak() {
@@ -162,7 +228,7 @@ function pauseWork() {
   state = 'paused';
   pausedRemainingMs = remainingMs;
   rebuildTrayMenu();
-  updateTrayTooltip();
+  updateTray();
 }
 
 function resumeWork() {
@@ -170,13 +236,13 @@ function resumeWork() {
   state = 'working';
   remainingMs = pausedRemainingMs;
   rebuildTrayMenu();
-  updateTrayTooltip();
+  updateTray();
 }
 
 function tick() {
   if (state === 'paused') return;
   remainingMs = Math.max(0, remainingMs - 1000);
-  updateTrayTooltip();
+  updateTray();
   if (remainingMs <= 0) {
     if (state === 'working') triggerBreak();
     else if (state === 'break') endBreak();
@@ -274,7 +340,7 @@ ipcMain.handle('settings:save', (_, newSettings) => {
   manageStartupShortcut(settings.launchAtStartup);
   if (state === 'working') remainingMs = settings.workIntervalMinutes * 60 * 1000;
   rebuildTrayMenu();
-  updateTrayTooltip();
+  updateTray();
   return { ok: true };
 });
 
@@ -283,7 +349,7 @@ ipcMain.handle('stats:get', () => ({ breaksToday: stats.getToday() }));
 // ── App lifecycle ──────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
-  tray = new Tray(createTrayIcon());
+  tray = new Tray(createTimerIcon(settings.workIntervalMinutes * 60 * 1000, 'working'));
   rebuildTrayMenu();
   // Clear any old registry-based startup entry left by previous builds
   app.setLoginItemSettings({ openAtLogin: false });
