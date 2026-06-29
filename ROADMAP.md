@@ -24,12 +24,6 @@ Les contributions sont les bienvenues — ouvrir une issue avant de commencer un
 ## v3.x — Multi-plateforme & distribution
 
 - [ ] **Intégration agenda** — skip automatique des pauses pendant les plages occupées (Outlook / Google Calendar via API)
-- [ ] **Convergence WinForms / Electron** — uniformiser les fonctionnalités entre les deux variantes ou choisir une architecture unifiée (Avalonia UI est un bon candidat pour un portage natif multi-plateforme)
-- [ ] **Déploiement MSIX** — package Microsoft Store pour une distribution sans droits admin en entreprise ; nécessite un `.wapproj` et la signature de code
-- [ ] **Support macOS natif** — menu-bar app en Swift/SwiftUI ou portage Avalonia ; notification `NSUserNotification` / `UNUserNotificationCenter`
-- [ ] **Support Linux natif** — daemon systemd + notification D-Bus (`notify-send` / `libnotify`) pour la variante Electron ou portage Avalonia
-- [ ] **Package Winget / Scoop** — publication dans les dépôts `winget-pkgs` et `scoop-extras` pour une installation en une ligne
-- [ ] **CI/CD GitHub Actions** — build, tests, packaging MSIX et publication de release automatisés sur push de tag `v*`
 
 ---
 

@@ -20,16 +20,23 @@ Fixer un écran force vos yeux à accommoder en permanence à courte distance. A
 
 ## Fonctionnalités
 
-- **Rappel automatique** — une notification discrète apparaît en bas à droite de chaque écran à l'échéance
+- **Rappel automatique** — overlay plein écran sur tous les moniteurs à l'échéance
 - **Entièrement paramétrable** — intervalle, durée, distance, message, langue
 - **Icône dans la barre des tâches** — compteur temps restant, menu contextuel complet
-- **Démarrage automatique avec Windows** — via la clé de registre `HKCU` (sans droits admin)
-- **Mode strict ou souple** — pause obligatoire ou bouton "Passer"
-- **Plage "Ne pas déranger"** — aucune interruption sur le créneau horaire de votre choix
+- **Démarrage automatique avec Windows** — sans droits admin
+- **Mode strict ou souple** — pause obligatoire ou bouton « Passer »
+- **Plage « Ne pas déranger »** — aucune interruption sur le créneau horaire de votre choix
 - **Sons optionnels** — signal au début et à la fin de chaque pause
-- **Statistiques du jour** — nombre de pauses effectuées
+- **Raccourcis clavier globaux** — `Ctrl+Alt+P` (arrêt/reprise) et `Ctrl+Alt+B` (pause immédiate), configurables
+- **Exercices guidés** — exercice oculaire ou d'étirement affiché aléatoirement à chaque pause (bibliothèque extensible)
+- **Thème clair / sombre** — détection automatique du thème Windows, ou choix manuel
+- **Grande pause** — pause longue automatique toutes les N pauses courtes
+- **Heure de fin de journée** — ajustement automatique de l'intervalle pour finir à l'heure cible
+- **Rappels de posture** — notification Toast périodique indépendante des pauses oculaires
+- **Statistiques cumulées** — historique par jour avec export CSV / JSON
+- **Animations** — fondu entrant et sortant sur l'overlay (200–300 ms)
 - **Multi-moniteurs** — l'overlay recouvre tous les écrans simultanément
-- **Instance unique** — un seul processus à la fois, même si l'exe est lancé deux fois
+- **Instance unique** — un seul processus à la fois
 - **Deux langues incluses** — français (par défaut) et anglais
 
 ---
@@ -58,47 +65,38 @@ Voir aussi [INSTALLATION.md](INSTALLATION.md) pour un guide complet incluant la 
 
 | Option | Action |
 |---|---|
-| Mettre en pause / Reprendre | Suspend ou reprend le minuteur |
-| Pause maintenant | Déclenche immédiatement une pause |
+| Arrêter temporairement / Reprendre | Suspend ou reprend le minuteur (`Ctrl+Alt+P`) |
+| Faire une pause | Déclenche immédiatement une pause (`Ctrl+Alt+B`) |
 | Paramètres… | Ouvre le panneau de configuration |
-| Statistiques | Affiche le nombre de pauses du jour |
+| Statistiques | Affiche l'historique des pauses |
 | Quitter | Ferme l'application |
 
 ---
 
 ## Paramètres
 
-Tous les paramètres sont sauvegardés dans `%APPDATA%\ReposeTesYeux\settings.json`.
+Tous les paramètres sont sauvegardés dans `%APPDATA%\Electron\repose-tes-yeux\settings.json` (variante Electron).
 
 | Paramètre | Défaut | Description |
 |---|---|---|
 | `workIntervalMinutes` | `20` | Durée de travail entre deux pauses (1–120 min) |
 | `breakDurationSeconds` | `20` | Durée de la pause (5–300 s) |
-| `distanceMetres` | `20` | Distance recommandée affichée sur l'overlay (1–100 m) |
-| `overlayMessage` | *(vide)* | Message personnalisé ; laissez vide pour le message par défaut |
-| `language` | `fr-FR` | Langue de l'interface (`fr-FR` ou `en-GB`) |
+| `distanceMetres` | `20` | Distance recommandée affichée sur l'overlay |
+| `overlayMessage` | *(vide)* | Message personnalisé ; vide = message par défaut |
+| `language` | `fr-FR` | Langue (`fr-FR` ou `en-GB`) |
 | `launchAtStartup` | `false` | Lancement automatique au démarrage de Windows |
-| `overlayDismissible` | `true` | Affiche un bouton "Passer" sur l'overlay |
+| `overlayDismissible` | `true` | Affiche le bouton « Passer » |
 | `soundEnabled` | `true` | Sons au début et à la fin de chaque pause |
-| `doNotDisturbStart` | *(vide)* | Début de la plage "Ne pas déranger" (format `HH:mm`) |
-| `doNotDisturbEnd` | *(vide)* | Fin de la plage "Ne pas déranger" (format `HH:mm`) |
-
-Exemple de fichier de configuration :
-
-```json
-{
-  "workIntervalMinutes": 25,
-  "breakDurationSeconds": 20,
-  "distanceMetres": 20,
-  "overlayMessage": "Regarde par la fenêtre !",
-  "language": "fr-FR",
-  "launchAtStartup": true,
-  "overlayDismissible": false,
-  "soundEnabled": true,
-  "doNotDisturbStart": "12:00",
-  "doNotDisturbEnd": "13:30"
-}
-```
+| `doNotDisturbStart` | *(vide)* | Début de la plage Ne pas déranger (`HH:MM`) |
+| `doNotDisturbEnd` | *(vide)* | Fin de la plage Ne pas déranger (`HH:MM`) |
+| `longBreakEvery` | `0` | Grande pause toutes les N pauses (0 = désactivé) |
+| `longBreakDurationSeconds` | `300` | Durée de la grande pause (s) |
+| `postureReminderMinutes` | `0` | Rappel de posture toutes les N minutes (0 = désactivé) |
+| `endOfDayTarget` | *(vide)* | Heure cible de fin de session (`HH:MM`) |
+| `shortcutPause` | `Ctrl+Alt+P` | Raccourci arrêt/reprise |
+| `shortcutBreak` | `Ctrl+Alt+B` | Raccourci pause immédiate |
+| `exercisesEnabled` | `true` | Afficher un exercice pendant la pause |
+| `theme` | `auto` | Thème : `auto` / `dark` / `light` |
 
 ---
 
@@ -145,21 +143,21 @@ La release publie automatiquement les fichiers suivants sur GitHub via GitHub Ac
 1. Mettez à jour la version dans `electron-app/package.json` :
 
 ```json
-{ "version": "1.2.3" }
+{ "version": "2.1.0" }
 ```
 
 2. Committez ce changement :
 
 ```powershell
 git add electron-app/package.json
-git commit -m "chore: bump electron version to 1.2.3"
+git commit -m "chore: bump electron version to 2.1.0"
 ```
 
 3. Créez et poussez un tag `electron-vX.Y.Z` :
 
 ```powershell
-git tag electron-v1.2.0
-git push origin electron-v1.2.0
+git tag electron-v2.1.0
+git push origin electron-v2.1.0
 ```
 
 GitHub Actions déclenche alors le workflow **Electron — Release** qui :
@@ -210,6 +208,30 @@ L'exe se trouve ensuite dans `ReposeTesYeux/bin/Release/net8.0-windows/win-x64/p
 ---
 
 ## Architecture
+
+### Variante Electron (v2.x — active)
+
+```
+electron-app/
+├── main.js              — processus principal : minuterie, tray, IPC, raccourcis globaux
+├── preload.js           — pont context-bridge entre main et renderers
+├── exercises.json       — bibliothèque d'exercices (œil + étirement), extensible
+├── src/
+│   ├── i18n.js          — chaînes localisées fr-FR / en-GB
+│   ├── settings.js      — lecture/écriture JSON dans %APPDATA%
+│   └── stats.js         — statistiques persistantes par jour
+└── renderer/
+    ├── index.html       — overlay plein écran (pause)
+    ├── renderer.js      — logique overlay : countdown, exercices, animations
+    ├── styles.css        — thème dark/light, animations fade
+    ├── settings.html    — fenêtre de configuration
+    ├── settings-renderer.js
+    ├── settings.css
+    ├── stats.html       — fenêtre statistiques (historique + export)
+    └── stats-renderer.js
+```
+
+### Variante WinForms (v1.x — référence)
 
 ```
 ReposeTesYeux/
