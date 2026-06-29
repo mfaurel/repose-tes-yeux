@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -33,11 +33,6 @@ jobs:
       - name: Install dependencies
         working-directory: electron-app
         run: npm ci
-
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
-        working-directory: electron-app
-        run: npm run build:win
 
       - name: Build (macOS)
         if: runner.os == 'macOS'
@@ -61,7 +56,6 @@ jobs:
         with:
           name: electron-${{ runner.os }}-ci
           path: |
-            electron-app/dist/ReposeTesYeux-*.exe
             electron-app/dist/ReposeTesYeux-*.dmg
             electron-app/dist/ReposeTesYeux-*.AppImage
           if-no-files-found: warn

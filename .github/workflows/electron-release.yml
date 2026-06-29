@@ -42,8 +42,6 @@ jobs:
 
             | Plateforme | Fichier | Note |
             |---|---|---|
-            | Windows (direct) | `ReposeTesYeux-Portable-*.exe` | Télécharger et lancer directement |
-            | Windows (installeur) | `ReposeTesYeux-Setup-*.exe` | Installation silencieuse |
             | macOS Intel | `ReposeTesYeux-*-x64.dmg` | |
             | macOS Apple Silicon | `ReposeTesYeux-*-arm64.dmg` | |
             | Linux | `ReposeTesYeux-*-x64.AppImage` | `chmod +x` puis lancer |
@@ -63,14 +61,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Windows
-            os: windows-latest
-            build_cmd: npm run build:win
-            # Uploads both: ReposeTesYeux-Portable-*.exe  AND  ReposeTesYeux-Setup-*.exe
-            artifact_glob: |
-              electron-app/dist/ReposeTesYeux-Portable-*.exe
-              electron-app/dist/ReposeTesYeux-Setup-*.exe
-
           - name: macOS
             os: macos-latest
             build_cmd: npm run build:mac
