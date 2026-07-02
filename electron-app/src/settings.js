@@ -21,6 +21,11 @@ const DEFAULTS = {
   shortcutBreak: 'Ctrl+Alt+B',
   exercisesEnabled: true,
   theme: 'auto',
+  breakWarningSeconds: 0,
+  calendarEnabled: false,
+  calendarType: 'ics',
+  calendarIcsPath: '',
+  teamsDndEnabled: false,
 };
 
 function getPath() {

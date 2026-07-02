@@ -1,6 +1,6 @@
 const {
   app, BrowserWindow, screen, Tray, Menu, nativeImage,
-  ipcMain, globalShortcut, nativeTheme, Notification, dialog,
+  ipcMain, globalShortcut, nativeTheme, Notification, dialog, powerMonitor,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -12,6 +12,8 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 const { load: loadSettings, save: saveSettings } = require('./src/settings');
 const { t, tArr, setLanguage } = require('./src/i18n');
 const stats = require('./src/stats');
+const { isCurrentlyBusy } = require('./src/calendar');
+const { isTeamsDnd }      = require('./src/teams');
 
 // ── State ──────────────────────────────────────────────────────────────────
 let settings = loadSettings();
@@ -23,6 +25,9 @@ let breakCountToday = 0;
 let isCurrentBreakLong = false;
 let currentBreakExercise = null;
 let postureIntervalId = null;
+let warningShown = false;
+let isLocked = false;
+let wasAutoPausedByLock = false;
 
 let overlayWindows = [];
 let settingsWindow = null;
@@ -33,14 +38,16 @@ setLanguage(settings.language);
 
 // ── Exercises ─────────────────────────────────────────────────────────────
 const exercisesPath = path.join(__dirname, 'exercises.json');
-let exercises = { eye: [], stretch: [] };
+let exercises = { eye: [], stretch: [], long: [] };
 try { exercises = JSON.parse(fs.readFileSync(exercisesPath, 'utf8')); } catch (_) {}
 
-function getRandomExercise() {
+function getRandomExercise(isLong) {
   if (!settings.exercisesEnabled) return null;
-  const all = [...exercises.eye, ...exercises.stretch];
-  if (!all.length) return null;
-  const ex = all[Math.floor(Math.random() * all.length)];
+  const pool = isLong && (exercises.long || []).length
+    ? exercises.long
+    : [...exercises.eye, ...exercises.stretch];
+  if (!pool.length) return null;
+  const ex = pool[Math.floor(Math.random() * pool.length)];
   const langKey = settings.language === 'en-GB' ? 'en' : 'fr';
   return ex[langKey] || ex.fr || ex.en || null;
 }
@@ -219,6 +226,28 @@ function rebuildTrayMenu() {
   if (tray) tray.setContextMenu(buildTrayMenu());
 }
 
+// ── Break warning notification ────────────────────────────────────────────
+function showBreakWarning() {
+  if (!tray) return;
+  const sec = settings.breakWarningSeconds;
+  const plural = sec > 1 ? 's' : '';
+  const body = t('break_warning_body')
+    .replace('{0}', String(sec))
+    .replace('{1}', plural);
+  try {
+    tray.displayBalloon({
+      iconType: 'info',
+      title: t('break_warning_title'),
+      content: body,
+      respectQuietTime: true,
+    });
+  } catch (_) {
+    if (Notification.isSupported()) {
+      new Notification({ title: t('break_warning_title'), body }).show();
+    }
+  }
+}
+
 // ── Posture reminder ───────────────────────────────────────────────────────
 function showPostureNotification() {
   if (!Notification.isSupported()) return;
@@ -234,6 +263,21 @@ function resetPostureTimer() {
       if (state !== 'break') showPostureNotification();
     }, settings.postureReminderMinutes * 60 * 1000);
   }
+}
+
+// ── Screen lock handling ───────────────────────────────────────────────────
+function onScreenLock() {
+  isLocked = true;
+  if (state === 'working') {
+    pauseWork();
+    wasAutoPausedByLock = true;
+  }
+}
+
+function onScreenUnlock() {
+  isLocked = false;
+  if (wasAutoPausedByLock && state === 'paused') resumeWork();
+  wasAutoPausedByLock = false;
 }
 
 // ── Global shortcuts ───────────────────────────────────────────────────────
@@ -259,19 +303,36 @@ function registerShortcuts() {
 function startWorkPhase() {
   state = 'working';
   remainingMs = computeWorkMs();
+  warningShown = false;
   rebuildTrayMenu();
   updateTray();
 }
 
 function triggerBreak() {
+  if (isLocked) { startWorkPhase(); return; }
   if (isInDND()) { startWorkPhase(); return; }
+  if (isCurrentlyBusy(settings)) {
+    if (Notification.isSupported()) {
+      const body = t('calendar_skip_body').replace('{0}', String(settings.workIntervalMinutes));
+      new Notification({ title: t('calendar_skip_title'), body }).show();
+    }
+    startWorkPhase();
+    return;
+  }
+  if (isTeamsDnd(settings)) {
+    if (Notification.isSupported()) {
+      new Notification({ title: t('teams_skip_title'), body: t('teams_skip_body') }).show();
+    }
+    startWorkPhase();
+    return;
+  }
   breakCountToday++;
   isCurrentBreakLong = settings.longBreakEvery > 0
     && (breakCountToday % settings.longBreakEvery === 0);
   const durationSec = isCurrentBreakLong
     ? settings.longBreakDurationSeconds
     : settings.breakDurationSeconds;
-  currentBreakExercise = getRandomExercise();
+  currentBreakExercise = getRandomExercise(isCurrentBreakLong);
   state = 'break';
   remainingMs = durationSec * 1000;
   stats.increment(durationSec);
@@ -312,6 +373,13 @@ function tick() {
   if (state === 'paused') return;
   remainingMs = Math.max(0, remainingMs - 1000);
   updateTray();
+  if (state === 'working' && settings.breakWarningSeconds > 0 && !warningShown) {
+    const warnMs = settings.breakWarningSeconds * 1000;
+    if (remainingMs <= warnMs && remainingMs > 0) {
+      warningShown = true;
+      showBreakWarning();
+    }
+  }
   if (remainingMs <= 0) {
     if (state === 'working') triggerBreak();
     else if (state === 'break') endBreak();
@@ -337,6 +405,12 @@ function createOverlays() {
     win.setAlwaysOnTop(true, 'screen-saver');
     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+    // Re-apply bounds after creation: on Windows with mixed-DPI monitors the
+    // constructor resolves width/height in the primary monitor's DPI context,
+    // so non-primary monitors at a different scale factor end up the wrong size.
+    // setBounds() is called after the window is placed on its target monitor and
+    // therefore uses that monitor's DPI context, giving the correct dimensions.
+    win.setBounds({ x, y, width, height });
     overlayWindows.push(win);
   }
 }
@@ -354,7 +428,7 @@ function openSettings() {
     settingsWindow.focus(); return;
   }
   settingsWindow = new BrowserWindow({
-    width: 480, height: 780,
+    width: 480, height: 900,
     resizable: false, skipTaskbar: false,
     title: t('settings_title'),
     webPreferences: {
@@ -371,7 +445,7 @@ function openStats() {
     statsWindow.focus(); return;
   }
   statsWindow = new BrowserWindow({
-    width: 480, height: 520,
+    width: 480, height: 800,
     resizable: false, skipTaskbar: false,
     title: t('stats_title'),
     webPreferences: {
@@ -411,7 +485,10 @@ ipcMain.handle('settings:save', (_, newSettings) => {
   manageStartupShortcut(settings.launchAtStartup);
   registerShortcuts();
   resetPostureTimer();
-  if (state === 'working') remainingMs = computeWorkMs();
+  if (state === 'working') {
+    remainingMs = computeWorkMs();
+    warningShown = false;
+  }
   rebuildTrayMenu();
   updateTray();
   return { ok: true };
@@ -422,6 +499,17 @@ ipcMain.handle('stats:get', () => ({
 }));
 
 ipcMain.handle('stats:getAll', () => stats.getAll());
+
+ipcMain.handle('stats:gamification', () => stats.getGamification());
+
+ipcMain.handle('calendar:browse', async () => {
+  const parent = settingsWindow && !settingsWindow.isDestroyed() ? settingsWindow : null;
+  const result = await dialog.showOpenDialog(parent, {
+    filters: [{ name: 'iCalendar', extensions: ['ics'] }],
+    properties: ['openFile'],
+  });
+  return result.canceled ? null : result.filePaths[0];
+});
 
 ipcMain.handle('stats:export', async (_, format) => {
   const all = stats.getAll();
@@ -460,6 +548,10 @@ app.whenReady().then(() => {
   startWorkPhase();
   tickInterval = setInterval(tick, 1000);
   app.on('window-all-closed', (e) => e.preventDefault());
+  try {
+    powerMonitor.on('lock-screen', onScreenLock);
+    powerMonitor.on('unlock-screen', onScreenUnlock);
+  } catch (_) {}
 });
 
 app.on('before-quit', () => {

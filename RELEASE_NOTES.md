@@ -2,6 +2,59 @@
 
 ---
 
+## v3.1.0 — 2 juillet 2026 — Verrouillage & présentation
+
+### Nouvelles fonctionnalités
+
+- **Pause suspendue si ordinateur verrouillé** — la minuterie est mise en pause automatiquement lorsque l'ordinateur est verrouillé, et aucune pause n'est déclenchée pendant ce temps
+- **Reprise automatique au déverrouillage** — le décompte du temps de travail repart dès que l'ordinateur est déverrouillé (sauf si l'utilisateur avait déjà mis l'application en pause manuellement)
+- **Statut Teams « En présentation »** — ce statut est désormais traité comme « Ne pas déranger » pour le skip automatique des pauses
+
+---
+
+## v3.0.0 — 29 juin 2026 — Intégrations & engagement
+
+Cette version apporte trois axes majeurs : les notifications avant pause, l'intégration des agendas et de Teams pour éviter les interruptions pendant les réunions, et la gamification pour encourager l'assiduité.
+
+### Nouvelles fonctionnalités
+
+#### Notification avant pause
+- **Alerte configurable** — une notification ballon apparaît dans la zone systray N secondes avant la prochaine pause (0 à 60 s, configurable dans la section Minuterie des paramètres)
+- Utilise `tray.displayBalloon()` pour s'afficher directement depuis l'icône sans fenêtre
+
+#### Intégration agenda (skip automatique des réunions)
+- **Fichier .ics** — lecture d'un fichier iCalendar local (Outlook sync, Google Calendar, etc.) avec décodage RFC 5545 (dates UTC / flottantes / journées entières, événements TRANSPARENT et CANCELLED ignorés)
+- **Outlook COM** — interrogation de l'agenda Outlook actif via PowerShell COM sans token OAuth ; détecte toutes les réunions incluant les récurrences
+- Si une réunion est en cours au moment d'une pause, celle-ci est ignorée et la minuterie repart
+
+#### Intégration Teams (mode Ne pas déranger)
+- **Statut DND Teams** — si le statut Teams de l'utilisateur est « Ne pas déranger », la pause est ignorée et une notification explique le report
+- Détection via `%APPDATA%\Microsoft\Teams\storage.json` (Teams classique) avec repli sur l'état Focus Assist Windows (nouveau Teams)
+
+#### Gamification
+- **Compteur de jours actifs** — compteur du nombre total de jours où au moins une pause a été effectuée (affiché dans la fenêtre Statistiques)
+- **8 badges progressifs** : Premier regard (1ère pause) → Journée active (5 pauses/jour) → Régulier (3 jours) → Assidu (7 jours) → Habitué (30 jours) → Centenaire (100 pauses) → Marathonien (500) → Légende (1 000)
+- Les badges non obtenus sont affichés en mode verrouillé pour motiver leur déverrouillage
+
+#### Graphique 30 jours
+- **Histogramme** dans la fenêtre Statistiques : une barre par jour sur les 30 derniers jours, la hauteur représentant le nombre de pauses
+- La barre du jour en cours est mise en évidence ; les jours sans pause affichent une barre résiduelle
+
+#### Exercices grande pause
+- **Bibliothèque longue pause** — 8 nouvelles activités dédiées aux grandes pauses (sortir prendre l'air, tour du bureau, étirement complet, respiration, regard à l'horizon…) remplacent les exercices courts pendant les grandes pauses configurées
+
+### Paramètres ajoutés
+
+| Clé | Type | Défaut | Description |
+|---|---|---|---|
+| `breakWarningSeconds` | entier | `0` | Secondes avant la pause pour la notification préalable (0 = désactivé) |
+| `teamsDndEnabled` | bool | `false` | Activer la détection du statut DND Teams |
+| `calendarEnabled` | bool | `false` | Activer la détection de réunion via agenda |
+| `calendarType` | string | `ics` | Source de l'agenda : `ics` ou `outlook` |
+| `calendarIcsPath` | string | `""` | Chemin vers le fichier .ics local |
+
+---
+
 ## v2.1.0 — 29 juin 2026 — Electron : UX & accessibilité
 
 Cette version complète la roadmap v2.x pour la variante Electron. Toutes les fonctionnalités d'accessibilité, de confort et de personnalisation avancées sont désormais disponibles.

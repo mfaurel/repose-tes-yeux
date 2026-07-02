@@ -174,6 +174,40 @@ input[type="checkbox"] {
   flex-shrink: 0;
 }
 
+/* ── Browse row (calendar ICS picker) ── */
+.browse-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.browse-row input[type="text"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-browse {
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  background: transparent;
+  border: 1px solid var(--accent-border);
+  color: var(--text-muted);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-browse:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-dim);
+}
+
+.btn-browse:active { transform: scale(0.97); }
+
 /* ── Actions ── */
 .actions {
   display: flex;

@@ -175,6 +175,94 @@
       text-align: center;
       margin-top: 2px;
     }
+
+    /* ── Chart ── */
+    .chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--accent-border);
+      border-radius: 10px;
+      padding: 12px 14px 8px;
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 90px;
+      display: block;
+      overflow: visible;
+    }
+
+    .chart-bar { fill: var(--accent); opacity: 0.55; }
+    .chart-bar.today { opacity: 1; }
+    .chart-bar.zero  { fill: var(--accent-border); opacity: 1; }
+
+    .chart-axis {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      color: var(--text-muted);
+      font-size: 0.68rem;
+    }
+
+    /* ── Streak ── */
+    .streak-card {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--accent-border);
+      border-radius: 10px;
+      padding: 14px 20px;
+    }
+
+    .streak-value {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      filter: drop-shadow(0 0 8px rgba(79, 195, 247, 0.4));
+      line-height: 1;
+    }
+
+    .streak-unit {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ── Badges ── */
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .badge-item {
+      background: var(--surface);
+      border: 1px solid var(--accent-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .badge-item.locked {
+      opacity: 0.3;
+    }
+
+    .badge-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .badge-item.locked .badge-name {
+      color: var(--text-muted);
+    }
+
+    .badge-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
@@ -208,6 +296,33 @@
       <span class="export-label" id="lblExport">Exporter :</span>
       <button class="btn-export" id="exportCsv">CSV</button>
       <button class="btn-export" id="exportJson">JSON</button>
+    </div>
+
+    <!-- Chart -->
+    <div>
+      <p class="section-title" id="lblChart">30 derniers jours</p>
+      <div class="chart-wrap">
+        <svg id="chartSvg" class="chart-svg" viewBox="0 0 440 90" preserveAspectRatio="none"></svg>
+        <div class="chart-axis">
+          <span id="chartAxisStart"></span>
+          <span id="chartAxisEnd"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Streak -->
+    <div>
+      <p class="section-title" id="lblStreak">Jours actifs</p>
+      <div class="streak-card">
+        <span class="streak-value" id="streakValue">0</span>
+        <span class="streak-unit" id="streakUnit">jour</span>
+      </div>
+    </div>
+
+    <!-- Badges -->
+    <div>
+      <p class="section-title" id="lblBadges">Badges</p>
+      <div class="badge-grid" id="badgeGrid"></div>
     </div>
 
     <p class="close-hint" id="hint">Appuyez sur Échap pour fermer</p>

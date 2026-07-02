@@ -58,6 +58,12 @@ const LOCALES = {
       'Ajustez la hauteur de votre chaise',
       'Posez vos pieds à plat sur le sol',
     ],
+    break_warning_title:    'Pause imminente',
+    break_warning_body:     'Votre prochaine pause oculaire est dans {0} seconde{1}.',
+    calendar_skip_title:    'Pause reportée',
+    calendar_skip_body:     'Réunion en cours — la pause sera relancée dans {0} min.',
+    teams_skip_title:       'Pause reportée',
+    teams_skip_body:        'Teams : statut Ne pas déranger — pause ignorée.',
   },
   'en-GB': {
     app_name:               'Rest Your Eyes',
@@ -118,6 +124,12 @@ const LOCALES = {
       'Adjust your chair height',
       'Place your feet flat on the floor',
     ],
+    break_warning_title:    'Break coming up',
+    break_warning_body:     'Your next eye break is in {0} second{1}.',
+    calendar_skip_title:    'Break postponed',
+    calendar_skip_body:     'Meeting in progress — break will restart in {0} min.',
+    teams_skip_title:       'Break postponed',
+    teams_skip_body:        'Teams status is Do Not Disturb — break skipped.',
   },
 };
 

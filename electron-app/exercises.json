@@ -16,5 +16,15 @@
     { "fr": "Levez les bras au-dessus de la tête et étirez-vous", "en": "Raise your arms overhead and stretch" },
     { "fr": "Serrez les poings fort 5 secondes, puis relâchez", "en": "Squeeze fists tight for 5 seconds, then release" },
     { "fr": "Faites des cercles avec vos chevilles (assis ou debout)", "en": "Rotate your ankles in circles (seated or standing)" }
+  ],
+  "long": [
+    { "fr": "Sortez prendre l'air 5 minutes — laissez vos yeux se reposer à l'horizon", "en": "Step outside for 5 minutes — let your eyes rest on the horizon" },
+    { "fr": "Faites un tour du bureau ou de l'étage à pied", "en": "Walk a lap around the office or floor" },
+    { "fr": "Préparez une boisson chaude et buvez-la debout loin de l'écran", "en": "Make a hot drink and enjoy it standing away from the screen" },
+    { "fr": "Étirez tout le corps : chevilles, genoux, hanches, dos, épaules, cou", "en": "Full-body stretch: ankles, knees, hips, back, shoulders, neck" },
+    { "fr": "Faites 10 squats légers ou marchez sur place pendant 2 minutes", "en": "Do 10 gentle squats or march in place for 2 minutes" },
+    { "fr": "Allongez-vous quelques minutes les yeux fermés ou pratiquez la respiration profonde", "en": "Lie down for a few minutes with eyes closed, or practise deep breathing" },
+    { "fr": "Regardez par la fenêtre : fixez un point à plus de 6 mètres pendant 2 minutes", "en": "Look out the window: focus on a point over 6 metres away for 2 minutes" },
+    { "fr": "Hydratez-vous et profitez-en pour descendre chercher de l'eau ou faire un vrai break", "en": "Hydrate — walk to get water or take a proper step-away break" }
   ]
 }

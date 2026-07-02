@@ -13,7 +13,12 @@ contextBridge.exposeInMainWorld('settingsApi', {
 });
 
 contextBridge.exposeInMainWorld('statsApi', {
-  get:    ()       => ipcRenderer.invoke('stats:get'),
-  getAll: ()       => ipcRenderer.invoke('stats:getAll'),
-  export: (format) => ipcRenderer.invoke('stats:export', format),
+  get:             ()       => ipcRenderer.invoke('stats:get'),
+  getAll:          ()       => ipcRenderer.invoke('stats:getAll'),
+  export:          (format) => ipcRenderer.invoke('stats:export', format),
+  getGamification: ()       => ipcRenderer.invoke('stats:gamification'),
+});
+
+contextBridge.exposeInMainWorld('calendarApi', {
+  browse: () => ipcRenderer.invoke('calendar:browse'),
 });
