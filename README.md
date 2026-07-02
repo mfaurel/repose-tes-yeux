@@ -205,4 +205,4 @@ electron-app/
 
 ## Licence
 
-MIT — libre d'utilisation, de modification et de distribution.
+[MIT](LICENSE) — libre d'utilisation, de modification et de distribution.
