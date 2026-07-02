@@ -3,6 +3,9 @@
   "version": "2.1.0",
   "description": "20/20/20 eye rest reminder — always-on-top overlay",
   "main": "main.js",
+  "engines": {
+    "node": ">=22.3.0"
+  },
   "scripts": {
     "start": "electron .",
     "test": "node --experimental-test-module-mocks --test \"src/**/*.test.js\"",
