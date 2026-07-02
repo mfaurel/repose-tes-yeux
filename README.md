@@ -1,6 +1,6 @@
 # Repose Tes Yeux
 
-![Build](../../actions/workflows/build.yml/badge.svg)
+![Build](../../actions/workflows/electron-build.yml/badge.svg)
 
 > *"Repose tes yeux"* — French for **"Rest your eyes"**
 
@@ -46,9 +46,8 @@ Fixer un écran force vos yeux à accommoder en permanence à courte distance. A
 | Composant | Version minimale |
 |---|---|
 | Windows | 10 (64-bit) ou 11 |
-| .NET Desktop Runtime | 8.0 ([télécharger](https://dotnet.microsoft.com/download/dotnet/8.0)) |
 
-Aucun droit administrateur n'est nécessaire ni à l'installation ni à l'exécution.
+Aucun droit administrateur n'est nécessaire ni à l'installation ni à l'exécution. L'application Electron embarque son propre runtime.
 
 ---
 
@@ -56,7 +55,7 @@ Aucun droit administrateur n'est nécessaire ni à l'installation ni à l'exécu
 
 Voir aussi [INSTALLATION.md](INSTALLATION.md) pour un guide complet incluant la publication de release et les instructions par OS.
 
-1. Télécharger `ReposeTesYeux.exe` depuis les [Actions CI](../../actions/workflows/build.yml) (artefact `ReposeTesYeux-win-x64`) ou depuis les [Releases](../../releases)
+1. Télécharger `ReposeTesYeux-Portable-x.y.z.exe` (ou l'installeur `-Setup-`) depuis les [Releases](../../releases)
 2. Double-cliquer pour lancer — l'icône apparaît dans la barre système
 3. Le minuteur démarre immédiatement (intervalle par défaut : 20 minutes)
 4. À l'échéance, une notification apparaît en bas à droite de chaque écran
@@ -126,6 +125,13 @@ npm start
 
 Clic droit sur l'icône de la barre système → **Tester le rappel maintenant** pour déclencher l'overlay sans attendre 20 minutes.
 
+### Tests
+
+```powershell
+cd electron-app
+npm test
+```
+
 ### Créer une release GitHub
 
 La release publie automatiquement les fichiers suivants sur GitHub via GitHub Actions :
@@ -171,42 +177,6 @@ La release apparaît sur la page [Releases](../../releases) du dépôt. Les util
 
 ---
 
-## Développement
-
-### Prérequis
-
-- .NET 8 SDK (`winget install Microsoft.DotNet.SDK.8`)
-
-### Compiler
-
-```powershell
-dotnet build ReposeTesYeux/ReposeTesYeux.csproj
-```
-
-### Lancer
-
-```powershell
-dotnet run --project ReposeTesYeux/ReposeTesYeux.csproj
-```
-
-### Tests
-
-```powershell
-dotnet test ReposeTestYeux.Tests/ReposeTestYeux.Tests.csproj
-```
-
-45 tests automatisés couvrent le moteur de minuterie, la persistance des paramètres et l'internationalisation.
-
-### Publier un exe portable
-
-```powershell
-dotnet publish ReposeTesYeux/ReposeTesYeux.csproj -c Release -r win-x64 --self-contained false
-```
-
-L'exe se trouve ensuite dans `ReposeTesYeux/bin/Release/net8.0-windows/win-x64/publish/`.
-
----
-
 ## Architecture
 
 ### Variante Electron (v2.x — active)
@@ -230,41 +200,6 @@ electron-app/
     ├── stats.html       — fenêtre statistiques (historique + export)
     └── stats-renderer.js
 ```
-
-### Variante WinForms (v1.x — référence)
-
-```
-ReposeTesYeux/
-├── Timer/
-│   ├── EyeTimer.cs         — machine à états (Idle → Working → Break)
-│   ├── IClock.cs           — abstraction d'horloge (injectable pour les tests)
-│   └── TimerState.cs       — énumération des états
-├── Settings/
-│   ├── AppSettings.cs      — modèle de configuration typé
-│   └── SettingsStore.cs    — lecture/écriture JSON dans %APPDATA%
-├── Startup/
-│   └── StartupManager.cs   — clé de registre HKCU (sans droits admin)
-├── I18n/
-│   └── Strings.cs          — chaînes localisées fr-FR / en-GB
-└── UI/
-    ├── OverlayForm.cs       — fenêtre plein écran affichée pendant la pause
-    ├── SettingsForm.cs      — panneau de configuration
-    ├── StatsForm.cs         — statistiques du jour
-    └── TrayController.cs   — icône et menu de la barre système
-
-ReposeTesYeux.Tests/
-├── EyeTimerTests.cs        — 21 tests (transitions, pause, Ne-pas-déranger…)
-├── SettingsStoreTests.cs   — 8 tests (valeurs par défaut, JSON corrompu, clamping…)
-├── AppSettingsTests.cs     — 9 tests (WithDefaults, clamping, DND window)
-├── StringsTests.cs         — 5 tests (sélection de langue, fallback, clé inconnue)
-└── FakeClock.cs            — horloge simulée pour les tests déterministes
-```
-
----
-
-## Roadmap
-
-Voir [ROADMAP.md](ROADMAP.md) pour les fonctionnalités prévues.
 
 ---
 
