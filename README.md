@@ -4,7 +4,7 @@
 
 > *"Repose tes yeux"* — French for **"Rest your eyes"**
 
-A lightweight Windows tray application that reminds you to apply the **règle des 20/20/20** :
+Une application légère dans la barre des tâches Windows qui vous rappelle d'appliquer la **règle des 20/20/20** :
 
 > Toutes les **20 minutes**, faites une pause de **20 secondes** pour regarder quelque chose à au moins **20 mètres**.
 
@@ -51,14 +51,6 @@ Aucun droit administrateur n'est nécessaire ni à l'installation ni à l'exécu
 
 ---
 
-## Utilisation
-
-Voir aussi [INSTALLATION.md](INSTALLATION.md) pour un guide complet incluant la publication de release et les instructions par OS.
-
-1. Télécharger `ReposeTesYeux-Portable-x.y.z.exe` (ou l'installeur `-Setup-`) depuis les [Releases](../../releases)
-2. Double-cliquer pour lancer — l'icône apparaît dans la barre système
-3. Le minuteur démarre immédiatement (intervalle par défaut : 20 minutes)
-4. À l'échéance, une notification apparaît en bas à droite de chaque écran
 
 ### Menu contextuel (clic droit sur l'icône)
 
@@ -74,7 +66,7 @@ Voir aussi [INSTALLATION.md](INSTALLATION.md) pour un guide complet incluant la 
 
 ## Paramètres
 
-Tous les paramètres sont sauvegardés dans `%APPDATA%\Electron\repose-tes-yeux\settings.json` (variante Electron).
+Tous les paramètres sont sauvegardés dans `%APPDATA%\Electron\repose-tes-yeux\settings.json` 
 
 | Paramètre | Défaut | Description |
 |---|---|---|
@@ -97,13 +89,6 @@ Tous les paramètres sont sauvegardés dans `%APPDATA%\Electron\repose-tes-yeux\
 | `exercisesEnabled` | `true` | Afficher un exercice pendant la pause |
 | `theme` | `auto` | Thème : `auto` / `dark` / `light` |
 
----
-
-## Déploiement sans installation (portable)
-
-L'exe est **autonome** — copiez-le où vous voulez, sur une clé USB ou un répertoire réseau, et lancez-le. Les paramètres sont toujours écrits dans `%APPDATA%` de l'utilisateur courant.
-
-Pour un déploiement en masse (parc informatique), distribuez simplement l'exe via votre outil habituel. Chaque utilisateur peut configurer ses propres préférences sans toucher aux préférences des autres.
 
 ---
 
@@ -133,16 +118,6 @@ npm test
 ```
 
 ### Créer une release GitHub
-
-La release publie automatiquement les fichiers suivants sur GitHub via GitHub Actions :
-
-| Fichier | Description |
-|---|---|
-| `ReposeTesYeux-Portable-x.y.z.exe` | **Télécharger et lancer directement** — aucune installation |
-| `ReposeTesYeux-Setup-x.y.z.exe` | Installeur silencieux (NSIS) |
-| `ReposeTesYeux-x.y.z-x64.dmg` | macOS Intel |
-| `ReposeTesYeux-x.y.z-arm64.dmg` | macOS Apple Silicon |
-| `ReposeTesYeux-x.y.z-x64.AppImage` | Linux |
 
 **Étapes pour publier :**
 
